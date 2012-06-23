@@ -10,6 +10,7 @@ function projects() {
 		$r->name = $config['name'];
 		$r->repository = $repo->name;
 		$r->branch = $config['branch'];
+		$r->last_deployed = date('n/j/Y g:i:s A', $config['last_deployed']);
 		$r->id = $id+1;
 		$r->hash = $config['repository'];
 		$r->last_commit = GitDeploy::instance()->latest_commit($repo, $config['branch']);

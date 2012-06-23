@@ -49,10 +49,10 @@ class GitDeploy {
 	 * @var  array  description
 	 */
 	protected $_my_projects = array(
-		array('repository' => '30d8f1efbf5d3752f19c04a77a12c7f4', 'branch' => 'master', 'name' => 'TIAA IWC', 'destination' => '../deploy/tiaa-iwc'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'name' => 'TIAA IWC - Mutual Funds', 'destination' => '../deploy/tiaa-iwc-mutual-funds-master'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'name' => 'TIAA IWC - Mutual Funds Sprint 2', 'branch' => 'sprint2', 'destination' => '../deploy/tiaa-iwc-sprint2'),
-		array('repository' => 'f9035fba50904c22b98d725a4e8342b9', 'branch' => 'master', 'name' => 'TIAA IFA - Bulk Trade', 'destination' => '../deploy/tiaa-ifa-bulk-trade')
+		array('repository' => '30d8f1efbf5d3752f19c04a77a12c7f4', 'branch' => 'master', 'last_deployed' => 1340437412, 'name' => 'TIAA IWC', 'destination' => '../deploy/tiaa-iwc'),
+		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340354612, 'name' => 'TIAA IWC - Mutual Funds', 'destination' => '../deploy/tiaa-iwc-mutual-funds-master'),
+		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340268212, 'name' => 'TIAA IWC - Mutual Funds Sprint 2', 'branch' => 'sprint2', 'destination' => '../deploy/tiaa-iwc-sprint2'),
+		array('repository' => 'f9035fba50904c22b98d725a4e8342b9', 'branch' => 'master', 'last_deployed' => 1340181812, 'name' => 'TIAA IFA - Bulk Trade', 'destination' => '../deploy/tiaa-ifa-bulk-trade')
 	);
 
 	/**
@@ -160,7 +160,7 @@ class GitDeploy {
 	}
 
 	/**
-	 * Function Description
+	 * http://stackoverflow.com/questions/379081/track-all-remote-git-branches-as-local-branches
 	 * @param   string   description
 	 * @return  boolean
 	 * @uses    Class::method

@@ -51,7 +51,7 @@ if (isset($projects) && !empty($projects)):
 			<td><?=$project->id?></td>
 			<td>
 				<div class="btn-group" data-repository="<?=$project->hash?>" data-branch="<?=$project->branch?>">
-					<button class="btn dropdown-toggle" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
+					<button class="btn dropdown-toggle more-info" title="More Info" data-content="Last deployed: <?=$project->last_deployed?>" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a href="<?=url_for('/projects/pull')?>"><i class="icon-download-alt"></i> Pull</a></li>
 						<li><a href="#"><i class="icon-arrow-right"></i> Deploy</a></li>
@@ -81,6 +81,7 @@ if (isset($projects) && !empty($projects)):
 </div>
 <script type="text/javascript">
 	(function($){
+		$('.more-info').popover({title: '', delay: { show: 400, hide: 0}});
 		$('#projects-table .btn-group ul.dropdown-menu a').click(function(event){
 			event.preventDefault();
 			if ($(this).attr('href') != '#') {
