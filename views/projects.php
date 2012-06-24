@@ -4,7 +4,7 @@ if (isset($projects) && !empty($projects)):
 <div class="page-header">
 	<div class="pull-right">
 		<a href="#" class="btn btn btn-inverse btn-large"><i class="icon-arrow-down icon-white"></i> Pull All</a>
-		<a href="#" class="btn btn-primary btn-large"><i class="icon-plus icon-white"></i> Add Project</a>
+		<a href="<?=url_for('projects/new')?>" class="btn btn-primary btn-large"><i class="icon-plus icon-white"></i> Add Project</a>
 	</div>
 	<h1>Projects</h1>
 </div>
@@ -114,7 +114,7 @@ else:
 	<h1>No Projects Found</h1>
 	<p>It seems there aren't any projects set up yet.</p>
 	<p>
-		<a href="#" class="btn btn-primary btn-large">Set one up now!</a>
+		<a href="<?=url_for('projects/new')?>" class="btn btn-primary btn-large">Set one up now!</a>
 	</p>
 </div>
 <?php

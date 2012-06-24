@@ -57,3 +57,7 @@ function projects_pull() {
 		header('Location: '.url_for('/projects'));
 	}
 }
+
+function projects_new() {
+	return render('projects/new.php');
+}
