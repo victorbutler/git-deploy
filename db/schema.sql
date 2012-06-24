@@ -1,0 +1,15 @@
+CREATE TABLE "projects" (
+	"id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,
+	"name" VARCHAR NOT NULL ,
+	"branch" VARCHAR NOT NULL  DEFAULT 'master',
+	"last_deployed" INTEGER,
+	"destination" VARCHAR NOT NULL ,
+	"repository_id" INTEGER NOT NULL
+);
+
+CREATE TABLE "repositories" (
+	"id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,
+	"name" VARCHAR NOT NULL ,
+	"hash" VARCHAR NOT NULL,
+	"location" VARCHAR NOT NULL
+);

@@ -1,6 +1,7 @@
 <?php
 
 require_once('glip.php');
+require_once('database.php');
 
 /**
  * Handles common processes necessary for processing and procuring data
@@ -10,7 +11,7 @@ class GitDeploy {
 
 	// Static
 
-	public static $instance;
+	protected static $instance;
 	
 	/**
 	 * Singleton
@@ -31,7 +32,8 @@ class GitDeploy {
 	 */
 	protected $_config = array(
 		'repo_root' => '../',
-		'git_bin'   => '/usr/local/git/bin/git'
+		'git_bin'   => '/usr/local/git/bin/git',
+		'dsn'		=> 'sqlite:db/gitdeploy.db'
 	);
 
 	/**
@@ -49,10 +51,10 @@ class GitDeploy {
 	 * @var  array  description
 	 */
 	protected $_my_projects = array(
-		array('repository' => '30d8f1efbf5d3752f19c04a77a12c7f4', 'branch' => 'master', 'last_deployed' => 1340437412, 'name' => 'TIAA IWC', 'destination' => '../deploy/tiaa-iwc'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340354612, 'name' => 'TIAA IWC - Mutual Funds', 'destination' => '../deploy/tiaa-iwc-mutual-funds-master'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340268212, 'name' => 'TIAA IWC - Mutual Funds Sprint 2', 'branch' => 'sprint2', 'destination' => '../deploy/tiaa-iwc-sprint2'),
-		array('repository' => 'f9035fba50904c22b98d725a4e8342b9', 'branch' => 'master', 'last_deployed' => 1340181812, 'name' => 'TIAA IFA - Bulk Trade', 'destination' => '../deploy/tiaa-ifa-bulk-trade')
+		array('repository' => '30d8f1efbf5d3752f19c04a77a12c7f4', 'branch' => 'master', 'last_deployed' => 1340437412, 'name' => 'IWC', 'destination' => '../deploy/tiaa-iwc'),
+		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340354612, 'name' => 'IWC - Mutual Funds', 'destination' => '../deploy/tiaa-iwc-mutual-funds-master'),
+		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340268212, 'name' => 'IWC - Mutual Funds Sprint 2', 'branch' => 'sprint2', 'destination' => '../deploy/tiaa-iwc-sprint2'),
+		array('repository' => 'f9035fba50904c22b98d725a4e8342b9', 'branch' => 'master', 'last_deployed' => 1340181812, 'name' => 'IFA - Bulk Trade', 'destination' => '../deploy/tiaa-ifa-bulk-trade')
 	);
 
 	/**
@@ -94,7 +96,7 @@ class GitDeploy {
 	 * @uses    Class::method
 	 */
 	public function get_projects() {
-		return $this->_my_projects;
+		return Database::instance()->find('repositories');
 	}
 
 	/**
@@ -102,15 +104,7 @@ class GitDeploy {
 	 * @return  array
 	 */
 	public function get_repositories() {
-		if (!is_array($this->_repositories)) {
-			$repos = array();
-			foreach ($this->_my_repositories as $hash => $data) {
-				$repos[$hash] = new Git((is_dir($this->_config['repo_root'].$data['repository'].'/.git') ? $this->_config['repo_root'].$data['repository'].'/.git' : $this->_config['repo_root'].$data['repository']));
-				$repos[$hash]->name = $data['repository'];
-			}
-			$this->_repositories = $repos;
-		}
-		return $this->_repositories;
+		return Database::instance()->find('repositories');
 	}
 
 	/**
@@ -118,11 +112,8 @@ class GitDeploy {
 	 * @param   string   repository name
 	 * @return  mixed    boolean false or Git object
 	 */
-	public function get_repository($repository) {
-		if (array_key_exists(md5($repository), $this->get_repositories())) {
-			return $this->_repositories[$repository];
-		}
-		return false;
+	public function get_repository($repository_name) {
+		return Database::instance()->find('repositories', array('name'), array('name' => $repository_name));
 	}
 
 	/**
@@ -130,11 +121,8 @@ class GitDeploy {
 	 * @param   string   repository name
 	 * @return  mixed    boolean false or Git object
 	 */
-	public function get_repository_by_hash($repository) {
-		if (array_key_exists($repository, $this->get_repositories())) {
-			return $this->_repositories[$repository];
-		}
-		return false;
+	public function get_repository_by_hash($repository_name) {
+		return Database::instance()->find('repositories', array('hash'), array('hash' => md5($repository_name)));
 	}
 
 	/**

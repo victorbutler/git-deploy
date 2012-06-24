@@ -38,7 +38,6 @@ if (isset($projects) && !empty($projects)):
 			<th>#</th>
 			<th>Name</th>
 			<th>Repository</th>
-			<th>Branch</th>
 			<th>Last Commit</th>
 			<th class="span4"></th>
 		</tr>
@@ -60,8 +59,7 @@ if (isset($projects) && !empty($projects)):
 					</ul>
 				</div>
 			</td>
-			<td><?=$project->repository?></td>
-			<td><?=$project->branch?></td>
+			<td><?=$project->repository?>/<?=$project->branch?></td>
 			<td class="author"><?=$project->last_commit->author->name?> <em class="muted">(<?=Formatter::relative_time($project->last_commit->author->time)?>)</em></td>
 			<td class="summary span4"><?=$project->last_commit->summary?></td>
 		</tr>
