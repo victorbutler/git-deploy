@@ -151,4 +151,19 @@ SQL;
 		return false;
 	}
 
+	/**
+	 * Function Description
+	 * @param   string   description
+	 * @return  boolean
+	 * @uses    Class::method
+	 */
+	public function update_deploy($project_id) {
+		$sql = 'UPDATE `projects` SET last_deployed='.time().' WHERE id='.$project_id;
+		$stmt = $this->db()->prepare($sql);
+		if ($stmt->execute()) {
+			return $this->db()->lastInsertId();
+		}
+		return false;
+	}
+
 }

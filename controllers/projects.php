@@ -10,6 +10,7 @@ function projects() {
 		$r->name = $project->name;
 		$r->repository = $repo->name;
 		$r->branch = $project->branch;
+		$r->destination = $project->destination;
 		if ($project->last_deployed) {
 			$r->last_deployed = date('n/j/Y g:i:s A', $project->last_deployed);
 		} else {
@@ -112,4 +113,63 @@ function projects_new() {
 	set('error', $error);
 	set('error_fields', $error_fields);
 	return render('projects/new.php');
+}
+
+function projects_deploy() {
+	if (count($_POST)) {
+		$error = false;
+		if (array_key_exists('project_id', $_POST)) {
+			$project = GitDeploy::instance()->get_project($_POST['project_id']);
+			$deploy = GitDeploy::instance()->deploy($project);
+			if ($project === false || $deploy === false) {
+				$error = 'Deploy encountered an error';
+			}
+		} else {
+			$error = 'Improperly formatted input';
+		}
+		
+		if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+			if ($error !== false) {
+				$o = new stdClass;
+				$o->error = $error;
+				$o->date = time();
+				return json($o);
+			}
+			$last_commit = GitDeploy::instance()->latest_commit($project);
+			$o = new stdClass;
+			$o->error = false;
+			$o->author = $last_commit->author->name.' <em class="muted">('.Formatter::relative_time($last_commit->author->time).')</em>';
+			$o->summary = $last_commit->summary;
+			return json($o);
+		} else {
+			set('error', $error);
+			return render('deploy.php');
+		}
+	} else {
+		header('Location: '.url_for('/deploy'));
+	}
+}
+
+function projects_lookup() {
+	if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+		if (count($_POST)) {
+			$id = $_POST['project_id'];
+			$project = GitDeploy::instance()->get_project($id);
+			$o = new stdClass;
+			$o->project = $project;
+			$o->error = false;
+			$o->date = time();
+			if ($project->last_deployed) {
+				$o->last_deployed = date('n/j/Y g:i:s A', $project->last_deployed);
+			} else {
+				$o->last_deployed = 'Never';
+			}
+			return json($o);
+		}
+		$o = new stdClass;
+		$o->error = 'Invalid input';
+		$o->date = time();
+		return json($o);
+	}
+	header('Location: '.url_for('/'));
 }

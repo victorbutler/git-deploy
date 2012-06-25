@@ -17,11 +17,9 @@ function before($route) {
 
 dispatch('/', 'homepage');
 
-dispatch('/deploy/:project', 'deploy');
-
-dispatch_post('/deploy', 'deploy_post');
-
 dispatch('/projects', 'projects');
+
+dispatch_post('/projects/lookup', 'projects_lookup');
 
 dispatch('/projects/pull', 'projects_pull');
 
@@ -30,6 +28,10 @@ dispatch('/projects/new', 'projects_new');
 dispatch_post('/projects/new', 'projects_new');
 
 dispatch_post('/projects/pull', 'projects_pull');
+
+dispatch('/projects/deploy', 'projects_deploy');
+
+dispatch_post('/projects/deploy', 'projects_deploy');
 
 run();
 

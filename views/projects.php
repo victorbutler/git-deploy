@@ -50,10 +50,10 @@ if (isset($projects) && !empty($projects)):
 			<td><?=$project->id?></td>
 			<td>
 				<div class="btn-group" data-project="<?=$project->id?>">
-					<button class="btn dropdown-toggle more-info" title="More Info" data-content="Last deployed: <?=$project->last_deployed?>" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
+					<button class="btn dropdown-toggle more-info" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
-						<li><a href="<?=url_for('/projects/pull')?>"><i class="icon-download-alt"></i> Pull</a></li>
-						<li><a href="#"><i class="icon-arrow-right"></i> Deploy</a></li>
+						<li><a href="<?=url_for('/projects/pull')?>" data-action="pull"><i class="icon-download-alt"></i> Pull</a></li>
+						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
 						<li class="divider"></li>
 						<li><a href="#"><i class="icon-wrench"></i> Configure</a></li>
 					</ul>
@@ -68,7 +68,7 @@ if (isset($projects) && !empty($projects)):
 ?>
 	</tbody>
 </table>
-<div class="modal hide" id="status-modal">
+<div class="modal hide" id="status-modal-pull">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal">×</button>
 		<h3>Pulling</h3>
@@ -77,21 +77,40 @@ if (isset($projects) && !empty($projects)):
 		<p>Please wait while we update the requested repository. This should only take a minute.</p>
 	</div>
 </div>
+<div class="modal hide" id="status-modal-deploy">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">×</button>
+		<h3>Deploying</h3>
+	</div>
+	<div class="modal-body">
+		<p>Please wait while we deploy your project. This should only take a minute, but with big projects it may take a little longer.</p>
+	</div>
+</div>
 <script type="text/javascript">
 	(function($){
-		$('.more-info').popover({title: '', delay: { show: 400, hide: 0}});
+		$('.more-info').hover(function(event){
+			var self = $(this);
+			if (!self.data('cache')) {
+				$.post('<?=url_for('/projects/lookup')?>', {project_id: $(this).closest('.btn-group').attr('data-project')}, function(data, textStatus, jqXHR){
+					self.data('cache', data);
+					self.popover({title: data.project.name+' Info', delay: {show: 400, hide: 0}, content: '<h4>Last Deployed</h4><p>'+data.last_deployed+'<p><h4>Deploy Location</h4><p>'+data.project.destination+'</p>'}).popover('show');
+				});
+			}
+		});
 		$('#projects-table .btn-group ul.dropdown-menu a').click(function(event){
 			event.preventDefault();
 			if ($(this).attr('href') != '#') {
-				$('#status-modal').modal({keyboard: false});
+				var self = $(this);
+				$('#status-modal-'+self.attr('data-action')).modal({keyboard: false});
 				var button = $(this).closest('.btn-group');
-				$.post('<?=url_for('/projects/pull')?>', {project_id: button.attr('data-project')}, function(data, textStatus, jqXHR){
-					$('#status-modal').modal('hide');
+				$.post(self.attr('href'), {project_id: button.attr('data-project')}, function(data, textStatus, jqXHR){
+					$('#status-modal-'+self.attr('data-action')).modal('hide');
+					$('.alert').remove();
 					if (data.error !== false) {
 						var error_html = '<div class="alert fade in alert-error"><button class="close" data-dismiss="alert">×</button><strong>Uh oh!</strong> '+data.error+'</div>';
 						$('#error-msg').html(error_html);
 					} else {
-						var status_html = '<div class="alert alert-success fade in"><button class="close" data-dismiss="alert">×</button><strong>Status</strong> Pulled successfully</div>';
+						var status_html = '<div class="alert alert-success fade in"><button class="close" data-dismiss="alert">×</button><strong>Status</strong> '+self.attr('data-action').toUpperCase()+' was successful</div>';
 						$('#error-msg').empty();
 						$('#status-msg').html(status_html);
 						var tr = button.closest('tr');

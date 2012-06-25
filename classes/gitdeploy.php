@@ -33,34 +33,9 @@ class GitDeploy {
 	protected $_config = array(
 		'repo_root' => 'repositories/',
 		'git_bin'   => '/usr/local/git/bin/git',
+		'rsync_bin' => '/usr/bin/rsync',
 		'dsn'		=> 'sqlite:db/gitdeploy.db'
 	);
-
-	/**
-	 * TODO: move this into permanent storage
-	 * @var  array  description
-	 */
-	protected $_my_repositories = array(
-		'30d8f1efbf5d3752f19c04a77a12c7f4' => array('repository' => 'tiaa-iwc'),
-		'132555c79781177e0670ffd3da57a442' => array('repository' => 'tiaa-iwc-mutual-funds'),
-		'f9035fba50904c22b98d725a4e8342b9' => array('repository' => 'tiaa-ifa-bt2')
-	);
-
-	/**
-	 * TODO: move this into permanent storage
-	 * @var  array  description
-	 */
-	protected $_my_projects = array(
-		array('repository' => '30d8f1efbf5d3752f19c04a77a12c7f4', 'branch' => 'master', 'last_deployed' => 1340437412, 'name' => 'IWC', 'destination' => '../deploy/tiaa-iwc'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340354612, 'name' => 'IWC - Mutual Funds', 'destination' => '../deploy/tiaa-iwc-mutual-funds-master'),
-		array('repository' => '132555c79781177e0670ffd3da57a442', 'branch' => 'master', 'last_deployed' => 1340268212, 'name' => 'IWC - Mutual Funds Sprint 2', 'branch' => 'sprint2', 'destination' => '../deploy/tiaa-iwc-sprint2'),
-		array('repository' => 'f9035fba50904c22b98d725a4e8342b9', 'branch' => 'master', 'last_deployed' => 1340181812, 'name' => 'IFA - Bulk Trade', 'destination' => '../deploy/tiaa-ifa-bulk-trade')
-	);
-
-	/**
-	 * @var  array  repository object storage
-	 */
-	protected $_repositories;
 
 	/**
 	 * Set up environment
@@ -135,7 +110,7 @@ class GitDeploy {
 
 	/**
 	 * Updated serverside copy of repository
-	 * @param   mixed   repository name or Git object
+	 * @param   mixed   project id or object
 	 * @return  boolean
 	 * @throws  Exception
 	 */
@@ -164,13 +139,43 @@ class GitDeploy {
 	}
 
 	/**
+	 * Deploy project to directory
+	 * @param   mixed   project id or object
+	 * @return  boolean
+	 * @throws  Exception
+	 */
+	public function deploy($project_obj_or_id) {
+		if (!is_object($project_obj_or_id)) {
+			$project_obj_or_id = Database::instance()->find_one('projects', array('id'), array('id' => $project_obj_or_id));
+		}
+		if ($project_obj_or_id === false) {
+			throw new Exception('Invalid project');
+		}
+		$repository = Database::instance()->find_one('repositories', array('id'), array('id' => $project_obj_or_id->repository_id));
+		if ($repository === false) {
+			throw new Exception('Repository not found');
+		}
+		
+		if (is_dir($project_obj_or_id->destination) || (!is_dir($project_obj_or_id->destination) && mkdir($project_obj_or_id->destination, 0777, true))) {
+			$command = $this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['rsync_bin'].' --exclude=".git*" -vadrtuz  --progress --stats --delete '.realpath($repository->location).'/ '.realpath($project_obj_or_id->destination);
+			$result = shell_exec($command);
+			if ($result === NULL) {
+				throw new Exception('Problem performing deploy on '.$repository->name.' Command: '.$command);
+			}
+			$update_db = Database::instance()->update_deploy($project_obj_or_id->id);
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * http://stackoverflow.com/questions/379081/track-all-remote-git-branches-as-local-branches
 	 * @param   string   description
 	 * @return  Git
 	 */
 	protected function _clone_repository($name, $location, $remote) {
 		if (!is_dir(realpath($location))) {
-			if (mkdir($location) === false) {
+			if (mkdir($location, 0777, true) === false) {
 				throw new Exception('No permission on filesystem to the create directory');
 			}
 		}

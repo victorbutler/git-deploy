@@ -21,50 +21,34 @@ endif;
 ?>
 <form action="<?=url_for('projects/new')?>" method="post">
 	<h2>Repository</h2>
-    
+
     <div class="well">
-    <div class="control-group">
-      <label class="control-label" for="appendedInputButton">Append with button</label>
-      <div class="controls">
-        <div class="input-append btn-group">
-          <input class="span5" id="appendedInputButton" size="16" type="text" style="float:left;">
-          <a class="btn dropdown-toggle span3" data-toggle="dropdown" href="#">Select an existing repository
-    		<span class="caret"></span>
-  		  </a>
-          <ul class="dropdown-menu span8">
-            <li><a href="#">Switch Rabbit</a></li>
-            <li><a href="#">Wonder Lime</a></li>
-            <li><a href="#">TIAA-CREF</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    </div>
-    
-    <div class="well">
-	    <select name="repository_id"<?=(in_array('repository_id', $error_fields) ? ' class="control-group error"' : '')?>>
-	    	<option value="">New Repository</option>
-	    	<option disabled="disabled">---</option>
+    	<label>
+    		<span class="span2">Existing Repository:</span> 
+		    <select name="repository_id"<?=(in_array('repository_id', $error_fields) ? ' class="control-group error"' : '')?>>
+		    	<option value="">New Repository</option>
+		    	<option disabled="disabled">---</option>
 <?php
 foreach ($repositories as $repository):
 ?>
-		<option value="<?=$repository->id?>"><?=$repository->name?></option>
+			<option value="<?=$repository->id?>"<?=(array_key_exists('repository_id', $_POST) && $_POST['repository_id'] == $repository->id ? ' selected="selected"' : '')?>><?=$repository->name?></option>
 <?php
 endforeach;
 ?>
-	    </select>
+		    </select>
+    	</label>
     	<div class="new-repository">
-			<label<?=(in_array('repository_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Name:</span> <input type="text" name="repository_name" /></label>
-			<label<?=(in_array('repository_remote', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Remote Origin:</span> <input type="text" name="repository_remote" /></label>
+			<label<?=(in_array('repository_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Name:</span> <input type="text" name="repository_name"<?=(array_key_exists('repository_name', $_POST) ? ' value="'.$_POST['repository_name'].'"' : '')?> /></label>
+			<label<?=(in_array('repository_remote', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Remote Origin:</span> <input type="text" name="repository_remote"<?=(array_key_exists('repository_remote', $_POST) ? ' value="'.$_POST['repository_remote'].'"' : '')?> /></label>
     	</div>
 	</div>
     <h2>Project</h2>
     <div class="well">
-	<label<?=(in_array('project_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Project Name:</span> <input type="text" name="project_name" /></label>
-	<label<?=(in_array('project_branch', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Branch:</span> <input type="text" name="project_branch" /></label>
-	<label<?=(in_array('project_destination', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Deploy To:</span> <input type="text" name="project_destination" /></label>
+	<label<?=(in_array('project_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Project Name:</span> <input type="text" name="project_name"<?=(array_key_exists('project_name', $_POST) ? ' value="'.$_POST['project_name'].'"' : '')?> /></label>
+	<label<?=(in_array('project_branch', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Branch:</span> <input type="text" name="project_branch"<?=(array_key_exists('project_branch', $_POST) ? ' value="'.$_POST['project_branch'].'"' : '')?> /></label>
+	<label<?=(in_array('project_destination', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Deploy To:</span> <input type="text" name="project_destination"<?=(array_key_exists('project_destination', $_POST) ? ' value="'.$_POST['project_destination'].'"' : '')?> /></label>
     </div>
-	<input type="submit" class="btn btn-primary" value="Create"/>
+	<input type="submit" class="btn btn-primary btn-large" value="Create"/>
 </form>
 <script type="text/javascript">
 	$('select[name="repository_id"]').change(function(event){
