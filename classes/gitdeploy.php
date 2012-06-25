@@ -193,7 +193,7 @@ class GitDeploy {
 			}
 		}
 		
-		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' .';
+		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' . && '.$this->_config['git_bin'].' submodule update --init --recursive';
 		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
 
 		$result1 = shell_exec($command1);

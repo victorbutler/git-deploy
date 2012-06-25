@@ -49,6 +49,7 @@ if (isset($projects) && !empty($projects)):
 					<button class="btn dropdown-toggle more-info" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a href="<?=url_for('/projects/pulldeploy')?>" data-action="pull+deploy"><i class="icon-download-alt"></i><i class="icon-arrow-right"></i> Pull &amp; Deploy</a></li>
+						<li><a href="<?=$project->destination?>"><i class="icon-globe"></i> View</a></li>
 						<li class="divider"></li>
 						<li><a href="<?=url_for('/projects/pull')?>" data-action="pull"><i class="icon-download-alt"></i> Pull</a></li>
 						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
@@ -100,7 +101,7 @@ if (isset($projects) && !empty($projects)):
 				});
 			}
 		});
-		$('#projects-table .btn-group ul.dropdown-menu a').click(function(event){
+		$('#projects-table .btn-group ul.dropdown-menu a[data-action]').click(function(event){
 			event.preventDefault();
 			if ($(this).attr('href') != '#') {
 				var self = $(this);
