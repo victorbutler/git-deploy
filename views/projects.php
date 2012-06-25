@@ -49,7 +49,19 @@ if (isset($projects) && !empty($projects)):
 					<button class="btn dropdown-toggle more-info" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a href="<?=url_for('/projects/pulldeploy')?>" data-action="pull+deploy"><i class="icon-download-alt"></i><i class="icon-arrow-right"></i> Pull &amp; Deploy</a></li>
-						<li><a href="<?=$project->destination?>"><i class="icon-globe"></i> View</a></li>
+						<li>
+<?php
+if ($project->last_deployed === 'Never'):
+?>
+							<a><i class="icon-globe"></i> <span class="muted">View</span></a>
+<?php
+else:
+?>
+							<a href="<?=$project->destination?>"><i class="icon-globe"></i> View</a>
+<?php
+endif;
+?>
+						</li>
 						<li class="divider"></li>
 						<li><a href="<?=url_for('/projects/pull')?>" data-action="pull"><i class="icon-download-alt"></i> Pull</a></li>
 						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
