@@ -31,7 +31,7 @@ class GitDeploy {
 	 * @var  array  default configuration
 	 */
 	protected $_config = array(
-		'repo_root' => '../',
+		'repo_root' => 'repositories/',
 		'git_bin'   => '/usr/local/git/bin/git',
 		'dsn'		=> 'sqlite:db/gitdeploy.db'
 	);
@@ -77,26 +77,34 @@ class GitDeploy {
 	 * @return  mixed    boolean false or GitCommit object
 	 * @uses    Git, GitCommit
 	 */
-	public function latest_commit($repository, $branch = 'master') {
-		if (!($repository instanceof Git)) {
-			$repository = $this->get_repository($repository);
+	public function latest_commit($project_obj_or_id) {
+		if (!is_object($project_obj_or_id)) {
+			$project_obj_or_id = $this->get_project($project_obj_or_id);
 		}
-		if ($repository) {
-			$branch_name = $repository->getTip($branch);
-			$last_commit = $repository->getObject($branch_name);
+		$repository = $this->get_repository($project_obj_or_id->repository_id);
+		if ($repository && ($git = new Git($repository->location.'/.git'))) {
+			$branch_name = $git->getTip($project_obj_or_id->branch);
+			$last_commit = $git->getObject($branch_name);
 			return $last_commit;
 		}
 		return false;
 	}
 
 	/**
-	 * Function Description
-	 * @param   string   description
-	 * @return  boolean
-	 * @uses    Class::method
+	 * Get all projects
+	 * @return  mixed    array on success, false on failure
 	 */
 	public function get_projects() {
-		return Database::instance()->find('repositories');
+		return Database::instance()->find('projects');
+	}
+
+	/**
+	 * Get single project
+	 * @param   int      project id
+	 * @return  mixed    boolean false or object
+	 */
+	public function get_project($id) {
+		return Database::instance()->find_one('projects', array('id'), array('id' => $id));
 	}
 
 	/**
@@ -109,11 +117,11 @@ class GitDeploy {
 
 	/**
 	 * Get single repository
-	 * @param   string   repository name
-	 * @return  mixed    boolean false or Git object
+	 * @param   int      repository id
+	 * @return  mixed    boolean false or object
 	 */
-	public function get_repository($repository_name) {
-		return Database::instance()->find('repositories', array('name'), array('name' => $repository_name));
+	public function get_repository($id) {
+		return Database::instance()->find_one('repositories', array('id'), array('id' => $id));
 	}
 
 	/**
@@ -121,8 +129,8 @@ class GitDeploy {
 	 * @param   string   repository name
 	 * @return  mixed    boolean false or Git object
 	 */
-	public function get_repository_by_hash($repository_name) {
-		return Database::instance()->find('repositories', array('hash'), array('hash' => md5($repository_name)));
+	public function get_repository_by_hash($hash) {
+		return Database::instance()->find_one('repositories', array('hash'), array('hash' => $hash));
 	}
 
 	/**
@@ -131,13 +139,21 @@ class GitDeploy {
 	 * @return  boolean
 	 * @throws  Exception
 	 */
-	public function pull($repository, $branch = 'master') {
-		if (array_key_exists($repository, $this->get_repositories())) {
-			$repository = $this->_repositories[$repository];
+	public function pull($project_obj_or_id) {
+		if (!is_object($project_obj_or_id)) {
+			$project_obj_or_id = Database::instance()->find_one('projects', array('id'), array('id' => $project_obj_or_id));
 		}
+		if ($project_obj_or_id === false) {
+			throw new Exception('Invalid project');
+		}
+		$repository = Database::instance()->find_one('repositories', array('id'), array('id' => $project_obj_or_id->repository_id));
+		if ($repository === false) {
+			throw new Exception('Repository not found');
+		}
+		$git = new Git($repository->location.'/.git');
 
-		if ($repository instanceof Git) {
-			$command = 'cd '.realpath($this->_config['repo_root'].$repository->name).' && '.$this->_config['git_bin'].' checkout '.escapeshellarg($branch).' && '.$this->_config['git_bin'].' pull origin '.escapeshellarg($branch);
+		if ($git instanceof Git) {
+			$command = 'cd '.realpath($repository->location).' && '.$this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['git_bin'].' pull origin '.escapeshellarg($project_obj_or_id->branch);
 			$result = shell_exec($command);
 			if ($result === NULL) {
 				throw new Exception('Problem performing git pull on '.$repository->name.' Command: '.$command);
@@ -150,11 +166,113 @@ class GitDeploy {
 	/**
 	 * http://stackoverflow.com/questions/379081/track-all-remote-git-branches-as-local-branches
 	 * @param   string   description
-	 * @return  boolean
-	 * @uses    Class::method
+	 * @return  Git
 	 */
-	public function clonerepo($repository) {
+	protected function _clone_repository($name, $location, $remote) {
+		if (!is_dir(realpath($location))) {
+			if (mkdir($location) === false) {
+				throw new Exception('No permission on filesystem to the create directory');
+			}
+		}
 		
+		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' .';
+		$command2 = 'for remote in `'.$this->_config['git_bin'].' branch -r | '.$this->_config['git_bin'].' -v master `; do '.$this->_config['git_bin'].' checkout --track $remote ; done';
+
+		$result1 = shell_exec($command1);
+		$result2 = shell_exec($command2);
+		if ($result1 === NULL && $result2 === NULL) {
+			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command);
+		}
+		return new Git(realpath($location).'/.git');
+	}
+
+	/**
+	 * Created a repository
+	 * @param   string   name
+	 * @param   string   location
+	 * @return  mixed    row id on success, false on failure
+	 * @throws  Exception
+	 */
+	protected function _create_repository($name, $remote) {
+		$hash = md5($name.$remote);
+		$location = $this->_config['repo_root'].$hash;
+		if (!is_dir($location)) {
+			if (($result = Database::instance()->add_repository($name, $hash, $location)) !== false) {
+				$git = $this->_clone_repository($name, $location, $remote);
+				return $result;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Creates a repository inside a transaction
+	 * @param   string   name
+	 * @param   string   location
+	 * @return  mixed    row id on success, false on failure
+	 */
+	public function create_repository($name, $remote) {
+		Database::instance()->db()->beginTransaction();
+		$rowid = $this->_create_repository($name, $remote);
+		if ($rowid === false) {
+			$roll = Database::instance()->db()->rollBack();
+		}
+		if (Database::instance()->db()->commit()) {
+			return $rowid;
+		}
+		return false;
+	}
+
+	/**
+	 * Created a project
+	 * @param   string   name
+	 * @param   string   branch
+	 * @param   string   destination for deploy
+	 * @param   string   repository id
+	 * @return  mixed    row id on success, false on failure
+	 * @throws  Exception
+	 */
+	protected function _create_project($name, $branch, $destination, $repository_id) {
+		return Database::instance()->add_project($repository_id, $name, $branch, $destination);
+	}
+
+	/**
+	 * Creates a project inside a transaction
+	 * @param   string   name
+	 * @param   string   branch
+	 * @param   string   destination for deploy
+	 * @param   string   repository id
+	 * @return  mixed    row id on success, false on failure
+	 */
+	public function create_project($name, $branch, $destination, $repository_id) {
+		Database::instance()->db()->beginTransaction();
+		if (($rowid = $this->_create_project($name, $branch, $destination, $repository_id)) === false) {
+			$roll = Database::instance()->db()->rollBack();
+		}
+		if (Database::instance()->db()->commit()) {
+			return $rowid;
+		}
+		return false;
+	}
+
+	/**
+	 * Create both the repository and project at the same time within a transaction
+	 * @param   array   associative array of repository values
+	 * @param   array   associative array of project values
+	 * @return  boolean
+	 */
+	public function create_repository_and_project($repository_values, $project_values) {
+		Database::instance()->db()->beginTransaction();
+		$rowid = $this->_create_repository($repository_values['name'], $repository_values['remote']);
+		if ($rowid === false) {
+			Database::instance()->db()->rollBack();
+			return false;
+		}
+		if ($this->_create_project($project_values['name'], $project_values['branch'], $project_values['destination'], $rowid) && Database::instance()->db()->commit()) {
+			return true;
+		}
+		Database::instance()->db()->rollBack();
+		return false;
 	}
 
 }

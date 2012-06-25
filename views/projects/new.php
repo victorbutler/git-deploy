@@ -42,14 +42,36 @@ endif;
     </div>
     
     <div class="well">
-		<label><span class="span2">Name:</span> <input type="text" name="repositroy_name" /></label>
-		<label><span class="span2">Remote Origin:</span> <input type="text" name="repository_remote" /></label>
+	    <select name="repository_id"<?=(in_array('repository_id', $error_fields) ? ' class="control-group error"' : '')?>>
+	    	<option value="">New Repository</option>
+	    	<option disabled="disabled">---</option>
+<?php
+foreach ($repositories as $repository):
+?>
+		<option value="<?=$repository->id?>"><?=$repository->name?></option>
+<?php
+endforeach;
+?>
+	    </select>
+    	<div class="new-repository">
+			<label<?=(in_array('repository_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Name:</span> <input type="text" name="repository_name" /></label>
+			<label<?=(in_array('repository_remote', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Remote Origin:</span> <input type="text" name="repository_remote" /></label>
+    	</div>
 	</div>
     <h2>Project</h2>
     <div class="well">
-	<label><span class="span2">Project Name:</span> <input type="text" name="project_name" /></label>
-	<label><span class="span2">Branch:</span> <input type="text" name="project_branch" /></label>
-	<label><span class="span2">Deploy To:</span> <input type="text" name="project_destination" /></label>
+	<label<?=(in_array('project_name', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Project Name:</span> <input type="text" name="project_name" /></label>
+	<label<?=(in_array('project_branch', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Branch:</span> <input type="text" name="project_branch" /></label>
+	<label<?=(in_array('project_destination', $error_fields) ? ' class="control-group error"' : '')?>><span class="span2">Deploy To:</span> <input type="text" name="project_destination" /></label>
     </div>
 	<input type="submit" class="btn btn-primary" value="Create"/>
 </form>
+<script type="text/javascript">
+	$('select[name="repository_hash"]').change(function(event){
+		if ($(this).val() == '') {
+			$('.new-repository').show();
+		} else {
+			$('.new-repository').hide();
+		}
+	});
+</script>

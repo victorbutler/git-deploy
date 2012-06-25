@@ -26,7 +26,7 @@ if (isset($projects) && !empty($projects)):
 ?>
 	<div class="alert">
 		<button class="close" data-dismiss="alert">×</button>
-		<strong>Status</strong> <?=$status?>
+		<h3><?=$status?></h3>
 	</div>
 <?php
 	endif;
@@ -49,7 +49,7 @@ if (isset($projects) && !empty($projects)):
 		<tr>
 			<td><?=$project->id?></td>
 			<td>
-				<div class="btn-group" data-repository="<?=$project->hash?>" data-branch="<?=$project->branch?>">
+				<div class="btn-group" data-project="<?=$project->id?>">
 					<button class="btn dropdown-toggle more-info" title="More Info" data-content="Last deployed: <?=$project->last_deployed?>" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a href="<?=url_for('/projects/pull')?>"><i class="icon-download-alt"></i> Pull</a></li>
@@ -85,13 +85,13 @@ if (isset($projects) && !empty($projects)):
 			if ($(this).attr('href') != '#') {
 				$('#status-modal').modal({keyboard: false});
 				var button = $(this).closest('.btn-group');
-				$.post('<?=url_for('/projects/pull')?>', {repository: button.attr('data-repository'), branch: button.attr('data-branch')}, function(data, textStatus, jqXHR){
+				$.post('<?=url_for('/projects/pull')?>', {project_id: button.attr('data-project')}, function(data, textStatus, jqXHR){
 					$('#status-modal').modal('hide');
 					if (data.error !== false) {
 						var error_html = '<div class="alert fade in alert-error"><button class="close" data-dismiss="alert">×</button><strong>Uh oh!</strong> '+data.error+'</div>';
 						$('#error-msg').html(error_html);
 					} else {
-						var status_html = '<div class="alert fade in"><button class="close" data-dismiss="alert">×</button><strong>Status</strong> Pulled successfully</div>';
+						var status_html = '<div class="alert alert-success fade in"><button class="close" data-dismiss="alert">×</button><strong>Status</strong> Pulled successfully</div>';
 						$('#error-msg').empty();
 						$('#status-msg').html(status_html);
 						var tr = button.closest('tr');

@@ -27,6 +27,8 @@ dispatch('/projects/pull', 'projects_pull');
 
 dispatch('/projects/new', 'projects_new');
 
+dispatch_post('/projects/new', 'projects_new');
+
 dispatch_post('/projects/pull', 'projects_pull');
 
 run();

@@ -71,14 +71,14 @@ class Database {
 	 * @param   string   name
 	 * @return  mixed    integer of id on success, false on error
 	 */
-	public function add_repository($name, $location) {
+	public function add_repository($name, $hash, $location) {
 		$sql = <<<SQL
 		INSERT INTO `repositories` ("name", "hash", "location")
 		VALUES (:name, :hash, :location)
 SQL;
 		$stmt = $this->db()->prepare($sql);
 		$stmt->bindValue(':name', $name, PDO::PARAM_STR);
-		$stmt->bindValue(':hash', md5($name), PDO::PARAM_STR);
+		$stmt->bindValue(':hash', $hash, PDO::PARAM_STR);
 		$stmt->bindValue(':location', $location, PDO::PARAM_STR);
 		if ($stmt->execute()) {
 			return $this->db()->lastInsertId();
@@ -111,12 +111,23 @@ SQL;
 	}
 
 	/**
+	 * Search the database for one result
+	 * @param   array   columns to look for
+	 * @param   array   associative array of values to look for
+	 * @param   int     offset
+	 * @return  mixed   object on success, false on error
+	 */
+	public function find_one($table, $columns = array(), $values = array(), $offset = 0) {
+		return $this->find($table, $columns, $values, 1, $offset);
+	}
+
+	/**
 	 * Search the database
 	 * @param   array   columns to look for
 	 * @param   array   associative array of values to look for
 	 * @param   int     limit
 	 * @param   int     offset
-	 * @return  mixed   array on success, false on error
+	 * @return  mixed   array (or object when limit = 1) on success, false on error
 	 */
 	public function find($table, $columns = array(), $values = array(), $limit = -1, $offset = 0) {
 		$sql = 'SELECT * FROM `'.$table.'` ';
@@ -131,7 +142,10 @@ SQL;
 		foreach ($values as $name => $value) {
 			$stmt->bindValue(':'.$name, $value, PDO::PARAM_STR);
 		}
-		if ($stmt->execute() && ($rows = $stmt->fetchAll(PDO::FETCH_ASSOC)) !== false) {
+		if ($limit === 1 && $stmt->execute() && ($row = $stmt->fetch(PDO::FETCH_OBJ)) !== false) {
+			return $row;
+		}
+		if ($stmt->execute() && ($rows = $stmt->fetchAll(PDO::FETCH_OBJ)) !== false) {
 			return $rows;
 		}
 		return false;
