@@ -19,6 +19,10 @@ dispatch('/', 'homepage');
 
 dispatch('/projects', 'projects');
 
+dispatch('/projects/pullall', 'projects_pullall');
+
+dispatch_post('/projects/pulldeploy', 'projects_pull_deploy');
+
 dispatch_post('/projects/lookup', 'projects_lookup');
 
 dispatch('/projects/pull', 'projects_pull');

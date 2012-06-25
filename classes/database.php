@@ -71,18 +71,20 @@ class Database {
 	 * @param   string   name
 	 * @return  mixed    integer of id on success, false on error
 	 */
-	public function add_repository($name, $hash, $location) {
+	public function add_repository($name, $hash, $location, $remote) {
 		$sql = <<<SQL
-		INSERT INTO `repositories` ("name", "hash", "location")
-		VALUES (:name, :hash, :location)
+		INSERT INTO `repositories` ("name", "hash", "location", "remote")
+		VALUES (:name, :hash, :location, :remote)
 SQL;
 		$stmt = $this->db()->prepare($sql);
 		$stmt->bindValue(':name', $name, PDO::PARAM_STR);
 		$stmt->bindValue(':hash', $hash, PDO::PARAM_STR);
 		$stmt->bindValue(':location', $location, PDO::PARAM_STR);
-		if ($stmt->execute()) {
+		$stmt->bindValue(':remote', $remote, PDO::PARAM_STR);
+		if ($result = $stmt->execute()) {
 			return $this->db()->lastInsertId();
 		}
+		echo $sql;
 		return false;
 	}
 

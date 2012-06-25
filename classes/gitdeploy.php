@@ -139,6 +139,19 @@ class GitDeploy {
 	}
 
 	/**
+	 * Function Description
+	 * @param   string   description
+	 * @return  boolean
+	 * @uses    Class::method
+	 */
+	public function pull_all() {
+		$projects = $this->get_projects();
+		foreach ($projects as $project) {
+			$this->pull($project);
+		}
+	}
+
+	/**
 	 * Deploy project to directory
 	 * @param   mixed   project id or object
 	 * @return  boolean
@@ -157,7 +170,7 @@ class GitDeploy {
 		}
 		
 		if (is_dir($project_obj_or_id->destination) || (!is_dir($project_obj_or_id->destination) && mkdir($project_obj_or_id->destination, 0777, true))) {
-			$command = $this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['rsync_bin'].' --exclude=".git*" -vadrtuz  --progress --stats --delete '.realpath($repository->location).'/ '.realpath($project_obj_or_id->destination);
+			$command = 'cd '.realpath($repository->location).' '.$this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['rsync_bin'].' --exclude=".git*" -vadrtuz  --progress --stats --delete '.realpath($repository->location).'/ '.realpath($project_obj_or_id->destination);
 			$result = shell_exec($command);
 			if ($result === NULL) {
 				throw new Exception('Problem performing deploy on '.$repository->name.' Command: '.$command);
@@ -181,12 +194,19 @@ class GitDeploy {
 		}
 		
 		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' .';
-		$command2 = 'for remote in `'.$this->_config['git_bin'].' branch -r | '.$this->_config['git_bin'].' -v master `; do '.$this->_config['git_bin'].' checkout --track $remote ; done';
+		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
 
 		$result1 = shell_exec($command1);
 		$result2 = shell_exec($command2);
 		if ($result1 === NULL && $result2 === NULL) {
-			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command);
+			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command1);
+		}
+		$lines = preg_split('/\n/', $result2);
+		foreach ($lines as $line) {
+			if (strpos($line, 'origin/master') === false && trim($line) !== '') {
+				$parts = preg_split('/\//', trim($line));
+				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' checkout -b '.$parts[1].' '.trim($line));
+			}
 		}
 		return new Git(realpath($location).'/.git');
 	}
@@ -202,7 +222,7 @@ class GitDeploy {
 		$hash = md5($name.$remote);
 		$location = $this->_config['repo_root'].$hash;
 		if (!is_dir($location)) {
-			if (($result = Database::instance()->add_repository($name, $hash, $location)) !== false) {
+			if (($result = Database::instance()->add_repository($name, $hash, $location, $remote)) !== false) {
 				$git = $this->_clone_repository($name, $location, $remote);
 				return $result;
 			}

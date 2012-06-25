@@ -31,10 +31,14 @@ function projects_pull() {
 	if (count($_POST)) {
 		$error = false;
 		if (array_key_exists('project_id', $_POST)) {
-			$project = GitDeploy::instance()->get_project($_POST['project_id']);
-			$pull = GitDeploy::instance()->pull($project);
-			if ($project === false || $pull === false) {
-				$error = 'Pull encountered an error';
+			try {
+				$project = GitDeploy::instance()->get_project($_POST['project_id']);
+				$pull = GitDeploy::instance()->pull($project);
+				if ($project === false || $pull === false) {
+					$error = 'Pull encountered an error';
+				}
+			} catch (Exception $ex) {
+				$error = $ex->getMessage();
 			}
 		} else {
 			$error = 'Improperly formatted input';
@@ -85,7 +89,7 @@ function projects_new() {
 			}
 		}
 		if (count($error_fields)) {
-			$error = 'Please correct your errors on the form';
+			$error = 'Please make sure you\'ve filled out all the fields';
 		} else {
 			if ($_POST['repository_id'] == '') {
 				// new repository
@@ -119,10 +123,14 @@ function projects_deploy() {
 	if (count($_POST)) {
 		$error = false;
 		if (array_key_exists('project_id', $_POST)) {
-			$project = GitDeploy::instance()->get_project($_POST['project_id']);
-			$deploy = GitDeploy::instance()->deploy($project);
-			if ($project === false || $deploy === false) {
-				$error = 'Deploy encountered an error';
+			try {
+				$project = GitDeploy::instance()->get_project($_POST['project_id']);
+				$deploy = GitDeploy::instance()->deploy($project);
+				if ($project === false || $deploy === false) {
+					$error = 'Deploy encountered an error';
+				}
+			} catch (Exception $ex) {
+				$error = $ex->getMessage();
 			}
 		} else {
 			$error = 'Improperly formatted input';
@@ -172,4 +180,49 @@ function projects_lookup() {
 		return json($o);
 	}
 	header('Location: '.url_for('/'));
+}
+
+function projects_pullall() {
+	GitDeploy::instance()->pull_all();
+	header('Location: '.url_for('/projects'));
+}
+
+function projects_pull_deploy() {
+	if (count($_POST)) {
+		$error = false;
+		if (array_key_exists('project_id', $_POST)) {
+			try {
+				$project = GitDeploy::instance()->get_project($_POST['project_id']);
+				$pull = GitDeploy::instance()->pull($project);
+				$deploy = GitDeploy::instance()->deploy($project);
+				if ($project === false || $pull === false || $deploy === false) {
+					$error = 'Pull &amp; deploy encountered an error';
+				}
+			} catch (Exception $ex) {
+				$error = $ex->getMessage();
+			}
+		} else {
+			$error = 'Improperly formatted input';
+		}
+		
+		if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+			if ($error !== false) {
+				$o = new stdClass;
+				$o->error = $error;
+				$o->date = time();
+				return json($o);
+			}
+			$last_commit = GitDeploy::instance()->latest_commit($project);
+			$o = new stdClass;
+			$o->error = false;
+			$o->author = $last_commit->author->name.' <em class="muted">('.Formatter::relative_time($last_commit->author->time).')</em>';
+			$o->summary = $last_commit->summary;
+			return json($o);
+		} else {
+			set('error', $error);
+			return render('projects.php');
+		}
+	} else {
+		header('Location: '.url_for('/projects'));
+	}
 }

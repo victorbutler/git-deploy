@@ -9,7 +9,6 @@
 	<link rel="stylesheet" href="assets/css/bootstrap-responsive.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="assets/css/deploy.css" type="text/css" media="screen" />
 	<script type="text/javascript" src="assets/js/jquery-1.7.2.min.js"></script>
-	<script type="text/javascript" src="assets/js/jquery.color.js"></script>
 	<script type="text/javascript" src="assets/js/bootstrap.js"></script>
 	<?php if (isset($head)) echo $head; ?>
 </head>

@@ -1,9 +1,16 @@
 <?php
+content_for('head');
+?>
+<script type="text/javascript" src="assets/js/jquery.color.js"></script>
+<script type="text/javascript" src="assets/js/mustache.min.js"></script>
+<?php
+end_content_for();
+
 if (isset($projects) && !empty($projects)):
 ?>
 <div class="page-header">
 	<div class="pull-right">
-		<a href="#" class="btn btn btn-inverse btn-large"><i class="icon-arrow-down icon-white"></i> Pull All</a>
+		<a href="<?=url_for('/projects/pullall')?>" class="btn btn btn-inverse btn-large"><i class="icon-arrow-down icon-white"></i> Pull All</a>
 		<a href="<?=url_for('projects/new')?>" class="btn btn-primary btn-large"><i class="icon-plus icon-white"></i> Add Project</a>
 	</div>
 	<h1>Projects</h1>
@@ -20,18 +27,7 @@ if (isset($projects) && !empty($projects)):
 	endif;
 ?>
 </div>
-<div id="status-msg">
-<?php
-	if (isset($status) && $status !== false):
-?>
-	<div class="alert">
-		<button class="close" data-dismiss="alert">×</button>
-		<h3><?=$status?></h3>
-	</div>
-<?php
-	endif;
-?>
-</div>
+<div id="success-msg"></div>
 <table class="table table-striped" id="projects-table">
 	<thead>
 		<tr>
@@ -52,6 +48,8 @@ if (isset($projects) && !empty($projects)):
 				<div class="btn-group" data-project="<?=$project->id?>">
 					<button class="btn dropdown-toggle more-info" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
+						<li><a href="<?=url_for('/projects/pulldeploy')?>" data-action="pull+deploy"><i class="icon-download-alt"></i><i class="icon-arrow-right"></i> Pull &amp; Deploy</a></li>
+						<li class="divider"></li>
 						<li><a href="<?=url_for('/projects/pull')?>" data-action="pull"><i class="icon-download-alt"></i> Pull</a></li>
 						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
 						<li class="divider"></li>
@@ -68,24 +66,29 @@ if (isset($projects) && !empty($projects)):
 ?>
 	</tbody>
 </table>
-<div class="modal hide" id="status-modal-pull">
+<script type="text/template" id="modal-template">
+<div class="modal hide" id="action-modal">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal">×</button>
-		<h3>Pulling</h3>
+		<h3>{{action}}</h3>
 	</div>
 	<div class="modal-body">
-		<p>Please wait while we update the requested repository. This should only take a minute.</p>
+		<p>{{message}}</p>
 	</div>
 </div>
-<div class="modal hide" id="status-modal-deploy">
-	<div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal">×</button>
-		<h3>Deploying</h3>
-	</div>
-	<div class="modal-body">
-		<p>Please wait while we deploy your project. This should only take a minute, but with big projects it may take a little longer.</p>
-	</div>
+</script>
+<script type="text/template" id="error-template">
+<div class="alert fade in alert-error">
+	<button class="close" data-dismiss="alert">×</button>
+	<strong>Uh oh!</strong> {{message}}
 </div>
+</script>
+<script type="text/template" id="success-template">
+<div class="alert alert-success fade in">
+	<button class="close" data-dismiss="alert">×</button>
+	<strong>{{message}}</strong>
+</div>
+</script>
 <script type="text/javascript">
 	(function($){
 		$('.more-info').hover(function(event){
@@ -101,18 +104,23 @@ if (isset($projects) && !empty($projects)):
 			event.preventDefault();
 			if ($(this).attr('href') != '#') {
 				var self = $(this);
-				$('#status-modal-'+self.attr('data-action')).modal({keyboard: false});
+				var view = {action: self.attr('data-action').toUpperCase(), message: 'successful'};
+				if (self.attr('data-action') == 'pull') {
+					view = {action: 'Pulling', message: 'Please wait while we update the requested repository. This should only take a minute.'};
+				} else if (self.attr('data-action') == 'deploy') {
+					view = {action: 'Deploying', message: 'Please wait while we deploy your project. This should only take a minute, but with big projects it may take a little longer.'};
+				} else if (self.attr('data-action') == 'pull+deploy') {
+					view = {action: 'Pulling and Deploying', message: 'Please wait while we update the requested repository and deploy your project. This should only take a minute, but with big projects it may take a little longer.'};
+				}
+				var modal = $($.mustache($('#modal-template').html(), view)).appendTo('body').modal({keyboard: false});
 				var button = $(this).closest('.btn-group');
 				$.post(self.attr('href'), {project_id: button.attr('data-project')}, function(data, textStatus, jqXHR){
-					$('#status-modal-'+self.attr('data-action')).modal('hide');
+					modal.modal('hide').remove();
 					$('.alert').remove();
 					if (data.error !== false) {
-						var error_html = '<div class="alert fade in alert-error"><button class="close" data-dismiss="alert">×</button><strong>Uh oh!</strong> '+data.error+'</div>';
-						$('#error-msg').html(error_html);
+						$('#error-msg').html($.mustache($('#error-template').html(), {message: data.error}));
 					} else {
-						var status_html = '<div class="alert alert-success fade in"><button class="close" data-dismiss="alert">×</button><strong>Status</strong> '+self.attr('data-action').toUpperCase()+' was successful</div>';
-						$('#error-msg').empty();
-						$('#status-msg').html(status_html);
+						$('#success-msg').html($.mustache($('#success-template').html(), {message: view.action+' was successful'}));
 						var tr = button.closest('tr');
 						tr.find('td.author').html(data.author);
 						tr.find('td.summary').html(data.summary);
