@@ -67,6 +67,7 @@ endif;
 						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
 						<li class="divider"></li>
 						<li><a href="#"><i class="icon-wrench"></i> Configure</a></li>
+						<li><a data-toggle="modal" href="#delete-modal"><i class="icon-remove"></i> <span class="muted">Delete</span></a></li>
 					</ul>
 				</div>
 			</td>
@@ -79,6 +80,24 @@ endif;
 ?>
 	</tbody>
 </table>
+<div class="modal hide" id="delete-modal">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">×</button>
+		<h3>Are you sure you want to delete this project?</h3>
+	</div>
+	<div class="modal-body">
+		<div class="alert fade in alert-error">
+			<strong>This operation is irreversible. If no more projects are using the attached repository, it will also be deleted.</strong>
+		</div>
+		<form>
+			<span class="span2">Remove Deploys?</span> <label class="checkbox" for="remote_deploys"><input id="remote_deploys" type="checkbox" name="remove_deploys" value="yes" /> Yes</label>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<a class="btn btn-danger btn-large">Yes, I'm sure I want to delete this</a>
+		<a class="btn btn-large pull-left">NO! I changed my mind</a>
+	</div>
+</div>
 <script type="text/template" id="modal-template">
 <div class="modal hide" id="action-modal">
 	<div class="modal-header">
