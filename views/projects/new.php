@@ -67,11 +67,11 @@ endforeach;
 	<input type="submit" class="btn btn-primary" value="Create"/>
 </form>
 <script type="text/javascript">
-	$('select[name="repository_hash"]').change(function(event){
+	$('select[name="repository_id"]').change(function(event){
 		if ($(this).val() == '') {
 			$('.new-repository').show();
 		} else {
 			$('.new-repository').hide();
 		}
-	});
+	}).trigger('change');
 </script>

@@ -62,21 +62,25 @@ function projects_pull() {
 }
 
 function projects_new() {
+	$error = false;
+	$error_fields = array();
 	if (count($_POST)) {
-		$error = false;
-		$error_fields = array();
 		$expected = array(
-			'repository_id',
-			'repository_name',
-			'repository_remote',
 			'project_name',
 			'project_branch',
 			'project_destination'
 		);
 		foreach ($expected as $field) {
 			if (!isset($_POST[$field]) || $_POST[$field] == '') {
-				if ($field === 'repository_id') continue;
 				array_push($error_fields, $field);
+			}
+		}
+		if (!isset($_POST['repository_id']) || $_POST['repository_id'] == '') {
+			if (!isset($_POST['repository_name']) || $_POST['repository_name'] == '') {
+				array_push($error_fields, 'repository_name');
+			}
+			if (!isset($_POST['repository_remote']) || $_POST['repository_remote'] == '') {
+				array_push($error_fields, 'repository_remote');
 			}
 		}
 		if (count($error_fields)) {
@@ -93,17 +97,19 @@ function projects_new() {
 						'branch' => $_POST['project_branch'],
 						'destination' => $_POST['project_destination'],
 					));
+					header('Location: '.url_for('/projects'));
 				} catch (Exception $ex) {
 					$error = $ex->getMessage();
 				}
 			} else {
-				$result = GitDeploy::instance()->create_project($_POST['project_name'], $_POST['project_branch'], $_POST['project_destination'], $_POST['repositroy_id']);
+				$result = GitDeploy::instance()->create_project($_POST['project_name'], $_POST['project_branch'], $_POST['project_destination'], $_POST['repository_id']);
+				header('Location: '.url_for('/projects'));
 			}
 		}
 		set('num_of_repositories', count(GitDeploy::instance()->get_projects()));
-		set('error', $error);
-		set('error_fields', $error_fields);
 	}
 	set('repositories', Database::instance()->find('repositories'));
+	set('error', $error);
+	set('error_fields', $error_fields);
 	return render('projects/new.php');
 }
