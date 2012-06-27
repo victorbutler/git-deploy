@@ -170,7 +170,7 @@ class GitDeploy {
 		}
 		
 		if (is_dir($project_obj_or_id->destination) || (!is_dir($project_obj_or_id->destination) && mkdir($project_obj_or_id->destination, 0777, true))) {
-			$command = 'cd '.realpath($repository->location).' && '.$this->_config['git_bin'].' checkout "'.escapeshellarg($project_obj_or_id->branch).'" && '.$this->_config['rsync_bin'].' --exclude=".git*" -vadrtuz  --progress --stats --delete '.realpath($repository->location).'/ '.realpath($project_obj_or_id->destination);
+			$command = 'cd '.realpath($repository->location).' && '.$this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['rsync_bin'].' --exclude=".git*" -vadrtuz  --progress --stats --delete '.realpath($repository->location).'/ '.realpath($project_obj_or_id->destination);
 			$result = shell_exec($command);
 			if ($result === NULL) {
 				throw new Exception('Problem performing deploy on '.$repository->name.' Command: '.$command);
