@@ -21,6 +21,8 @@ dispatch('/projects', 'projects');
 
 dispatch('/projects/pullall', 'projects_pullall');
 
+dispatch('/projects/repositories', 'projects_repositories');
+
 dispatch_post('/projects/pulldeploy', 'projects_pull_deploy');
 
 dispatch_post('/projects/lookup', 'projects_lookup');

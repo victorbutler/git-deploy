@@ -72,7 +72,6 @@ function projects_new() {
 	if (count($_POST)) {
 		$expected = array(
 			'project_name',
-			'project_branch',
 			'project_destination'
 		);
 		foreach ($expected as $field) {
@@ -86,6 +85,13 @@ function projects_new() {
 			}
 			if (!isset($_POST['repository_remote']) || $_POST['repository_remote'] == '') {
 				array_push($error_fields, 'repository_remote');
+			}
+			if (!isset($_POST['project_branch']) || $_POST['project_branch'] === '') {
+				array_push($error_fields, 'project_branch');
+			}
+		} else {
+			if (!isset($_POST['project_branch_id']) || $_POST['project_branch_id'] === '') {
+				array_push($error_fields, 'project_branch');
 			}
 		}
 		if (count($error_fields)) {
@@ -107,13 +113,19 @@ function projects_new() {
 					$error = $ex->getMessage();
 				}
 			} else {
-				$result = GitDeploy::instance()->create_project($_POST['project_name'], $_POST['project_branch'], $_POST['project_destination'], $_POST['repository_id']);
+				$branches = GitDeploy::instance()->get_branches($_POST['repository_id']);
+				$branch = $branches[$_POST['project_branch_id']];
+				$result = GitDeploy::instance()->create_project($_POST['project_name'], $branch, $_POST['project_destination'], $_POST['repository_id']);
 				header('Location: '.url_for('/projects'));
 			}
 		}
 		set('num_of_repositories', count(GitDeploy::instance()->get_projects()));
 	}
-	set('repositories', Database::instance()->find('repositories'));
+	$repositories = Database::instance()->find('repositories');
+	foreach ($repositories as $repository) {
+		$repository->branches = GitDeploy::instance()->get_branches($repository);
+	}
+	set('repositories', $repositories);
 	set('error', $error);
 	set('error_fields', $error_fields);
 	return render('projects/new.php');
@@ -156,6 +168,17 @@ function projects_deploy() {
 	} else {
 		header('Location: '.url_for('/deploy'));
 	}
+}
+
+function projects_repositories() {
+	if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+		$repositories = Database::instance()->find('repositories');
+		foreach ($repositories as $repository) {
+			$repository->branches = GitDeploy::instance()->get_branches($repository);
+		}
+		return json($repositories);
+	}
+	header('Location: '.url_for('/projects'));
 }
 
 function projects_lookup() {
