@@ -32,7 +32,7 @@ class GitDeploy {
 	 */
 	protected $_config = array(
 		'repo_root' => 'repositories/',
-		'git_bin'   => '/usr/local/git/bin/git',
+		'git_bin'   => '/usr/bin/git',
 		'rsync_bin' => '/usr/bin/rsync',
 		'dsn'		=> 'sqlite:db/gitdeploy.db'
 	);
@@ -203,9 +203,9 @@ class GitDeploy {
 		}
 		$lines = preg_split('/\n/', $result2);
 		foreach ($lines as $line) {
-			if (strpos($line, 'origin/master') === false && trim($line) !== '') {
-				$parts = preg_split('/\//', trim($line));
-				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' checkout -b '.$parts[1].' '.trim($line));
+			if (strpos($line, 'origin/HEAD') === false && trim($line) !== '') {
+				$branch = preg_replace('/^\s*origin\//', '', trim($line));
+				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' checkout -b "'.$branch.'" "'.trim($line).'"');
 			}
 		}
 		return new Git(realpath($location).'/.git');
