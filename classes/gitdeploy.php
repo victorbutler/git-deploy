@@ -147,7 +147,14 @@ class GitDeploy {
 	public function pull_all() {
 		$projects = $this->get_projects();
 		foreach ($projects as $project) {
-			$this->pull($project);
+            if (($pid=pcntl_fork()) === -1) {
+                continue;
+            } elseif ($pid) {
+                pcntl_wait($status, WHOHANG);
+            } else {
+			    $this->pull($project);
+                exit();
+            }
 		}
 	}
 
