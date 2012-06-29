@@ -139,15 +139,15 @@ class GitDeploy {
 	}
 
 	/**
-	 * Function Description
-	 * @param   string   description
-	 * @return  boolean
-	 * @uses    Class::method
+	 * We iterate over all our defined projects and fork a pull using pcntl to provide
+	 * speed optimizations
+	 * @return  void
+	 * @uses    pcntl
 	 */
 	public function pull_all() {
 		$projects = $this->get_projects();
 		foreach ($projects as $project) {
-            if (($pid=pcntl_fork()) === -1) {
+            if (($pid = pcntl_fork()) === -1) {
                 continue;
             } elseif ($pid) {
                 pcntl_wait($status, WHOHANG);
