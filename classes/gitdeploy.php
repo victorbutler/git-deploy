@@ -151,7 +151,7 @@ class GitDeploy {
                 continue;
             } elseif ($pid) {
                 pcntl_wait($status, WHOHANG);
-            } else {
+            } elseif ($pid === 0) {
 			    $this->pull($project);
                 exit();
             }
