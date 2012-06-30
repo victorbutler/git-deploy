@@ -134,7 +134,6 @@ endif;
 					}
 				});
 			} else {
-				var data = self.data('cache');
 				self.popover('show');
 			}
 		});
