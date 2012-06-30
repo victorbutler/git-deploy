@@ -128,7 +128,9 @@ endif;
 			if (!self.data('cache')) {
 				$.post('<?=url_for('/projects/lookup')?>', {project_id: $(this).closest('.btn-group').attr('data-project')}, function(data, textStatus, jqXHR){
 					self.data('cache', data);
-					self.popover({animation: false, title: data.project.name+' Info', content: '<h4>Last Deployed</h4><p>'+data.last_deployed+'<p><h4>Deploy Location</h4><p>'+data.project.destination+'</p>'}).popover('show');
+					if (self.filter(':hover').length) {
+						self.popover({title: data.project.name+' Info', content: '<h4>Last Deployed</h4><p>'+data.last_deployed+'<p><h4>Deploy Location</h4><p>'+data.project.destination+'</p>'}).popover('show');
+					}
 				});
 			}
 		});
