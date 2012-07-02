@@ -37,6 +37,8 @@ dispatch_post('/projects/pull', 'projects_pull');
 
 dispatch('/projects/deploy', 'projects_deploy');
 
+dispatch('/projects/deployall', 'projects_deploy_all');
+
 dispatch_post('/projects/deploy', 'projects_deploy');
 
 run();

@@ -139,22 +139,15 @@ class GitDeploy {
 	}
 
 	/**
-	 * We iterate over all our defined projects and fork a pull using pcntl to provide
-	 * speed optimizations
+	 * We iterate over all our defined projects and pull
+	 * TODO: figure out how to make this faster (without using PCNTL)
 	 * @return  void
 	 * @uses    pcntl
 	 */
 	public function pull_all() {
 		$projects = $this->get_projects();
 		foreach ($projects as $project) {
-            if (($pid = pcntl_fork()) === -1) {
-                continue;
-            } elseif ($pid) {
-                pcntl_wait($status, WHOHANG);
-            } elseif ($pid === 0) {
-			    $this->pull($project);
-                exit();
-            }
+            $this->pull($project);
 		}
 	}
 
@@ -186,6 +179,18 @@ class GitDeploy {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Deploys all projects in the system
+	 * TODO: figure out how to make this faster (without using PCNTL)
+	 * @return      void
+	 */
+	public function deploy_all() {
+		$projects = $this->get_projects();
+		foreach ($projects as $project) {
+			$this->deploy($project);
+		}
 	}
 
 	/**
