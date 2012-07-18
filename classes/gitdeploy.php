@@ -253,7 +253,7 @@ class GitDeploy {
 		foreach ($lines as $line) {
 			if (strpos($line, 'origin/HEAD') === false && trim($line) !== '') {
 				$branch = preg_replace('/^\s*origin\//', '', trim($line));
-				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' checkout "'.$branch.'" "'.trim($line).'"');
+				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' branch "'.$branch.'" "'.trim($line).'"');
 			}
 		}
 		return new Git(realpath($location).'/.git');
