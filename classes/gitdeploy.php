@@ -249,11 +249,12 @@ class GitDeploy {
 		if ($result1 === NULL && $result3 === NULL) {
 			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command1);
 		}
-		$lines = preg_split('/\n/', $result2);
+		$lines = preg_split('/\n/', $result3);
 		foreach ($lines as $line) {
 			if (strpos($line, 'origin/HEAD') === false && trim($line) !== '') {
 				$branch = preg_replace('/^\s*origin\//', '', trim($line));
-				shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' branch "'.$branch.'" "'.trim($line).'"');
+				echo 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch "'.$branch.'" "'.trim($line).'"';
+				echo shell_exec('cd '.realpath($location).' && '.$this->_config['git_bin'].' checkout -b "'.$branch.'" "'.trim($line).'"');
 			}
 		}
 		return new Git(realpath($location).'/.git');
