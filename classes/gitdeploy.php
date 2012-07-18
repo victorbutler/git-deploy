@@ -32,7 +32,7 @@ class GitDeploy {
 	 */
 	protected $_config = array(
 		'repo_root' => 'repositories/',
-		'git_bin'   => '/usr/bin/git',
+		'git_bin'   => '/usr/local/bin/git',
 		'rsync_bin' => '/usr/bin/rsync',
 		'dsn'		=> 'sqlite:db/gitdeploy.db'
 	);
