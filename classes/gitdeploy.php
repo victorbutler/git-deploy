@@ -231,12 +231,22 @@ class GitDeploy {
 			}
 		}
 		
-		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' . && '.$this->_config['git_bin'].' submodule update --init --recursive';
-		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
+		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote;//.' . && '.$this->_config['git_bin'].' submodule update --init --recursive';
+		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' submodule update --init --recursive';
+		$command3 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
 
 		$result1 = shell_exec($command1);
-		$result2 = shell_exec($command2);
-		if ($result1 === NULL && $result2 === NULL) {
+		
+		if (is_file($submodules = realpath($location).'/.gitmodules') && strpos($remote, 'bitbucket.org') > -1) {
+			$protocol = substr($remote, 0, strpos($remote, '/', 8) + 1);
+			$modules_file = file_get_contents($submodules);
+			$new_modules_file = preg_replace('/(\s+url \= )git\@bitbucket.org\:(.*)/', '$1'.$protocol.'$2', $modules_file);
+			file_put_contents($submodules, $new_modules_file);
+			$result2 = shell_exec($command2);
+		}
+		
+		$result3 = shell_exec($command3);
+		if ($result1 === NULL && $result3 === NULL) {
 			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command1);
 		}
 		$lines = preg_split('/\n/', $result2);
