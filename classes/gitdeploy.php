@@ -74,6 +74,15 @@ class GitDeploy {
 	}
 
 	/**
+	 * Get all projects from a specific repository
+	 * @param	int		 repository id
+	 * @return  mixed    array on success, false on failure
+	 */
+	public function get_projects_by_repository($id) {
+		return Database::instance()->find('projects', array('repository_id'), array('repository_id' => $id));
+	}
+
+	/**
 	 * Get single project
 	 * @param   int      project id
 	 * @return  mixed    boolean false or object
@@ -106,6 +115,42 @@ class GitDeploy {
 	 */
 	public function get_repository_by_hash($hash) {
 		return Database::instance()->find_one('repositories', array('hash'), array('hash' => $hash));
+	}
+
+	protected function rrmdir($dir) {
+		if (is_dir($dir)) {
+			$objects = scandir($dir);
+			foreach ($objects as $object) {
+				if ($object != "." && $object != "..") {
+					if (filetype($dir."/".$object) == "dir") $this->rrmdir($dir."/".$object); else unlink($dir."/".$object);
+				}
+			}
+			reset($objects);
+			rmdir($dir);
+		}
+	}
+
+	/**
+	 * Delete project routine
+	 * @param   int       project id
+	 * @param   boolean   true to delete deploy
+	 * @return  mixed     false on error
+	 */
+	public function delete_project($id, $delete_deploys = false) {
+		$project = $this->get_project($id);
+		$results = Database::instance()->delete('projects', array('id'), array('id' => $id));
+		$projects = $this->get_projects_by_repository($project->repository_id);
+		if ($delete_deploys) {
+			if (is_dir($project->destination)) {
+				$this->rrmdir($project->destination);
+			}
+		}
+		if (count($projects) === 0) {
+			$repository = $this->get_repository($project->repository_id);
+			Database::instance()->delete('repositories', array('id'), array('id' => $repository->id));
+			$this->rrmdir($repository->location);
+		}
+		return $results;
 	}
 
 	/**
