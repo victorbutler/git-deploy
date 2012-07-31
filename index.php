@@ -33,6 +33,8 @@ dispatch('/projects/new', 'projects_new');
 
 dispatch_post('/projects/new', 'projects_new');
 
+dispatch_post('/projects/delete', 'projects_delete');
+
 dispatch_post('/projects/pull', 'projects_pull');
 
 dispatch('/projects/deploy', 'projects_deploy');

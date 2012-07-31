@@ -45,7 +45,7 @@ if (isset($projects) && !empty($projects)):
 		<tr>
 			<td><?=$project->id?></td>
 			<td>
-				<div class="btn-group" data-project="<?=$project->id?>">
+				<div class="btn-group" data-project="<?=$project->project_id?>">
 					<button class="btn dropdown-toggle more-info" data-toggle="dropdown"><?=$project->name?> <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a href="<?=url_for('/projects/pulldeploy')?>" data-action="pull+deploy"><i class="icon-download-alt"></i><i class="icon-arrow-right"></i> Pull &amp; Deploy</a></li>
@@ -67,7 +67,7 @@ endif;
 						<li><a href="<?=url_for('/projects/deploy')?>" data-action="deploy"><i class="icon-arrow-right"></i> Deploy</a></li>
 						<li class="divider"></li>
 						<li><a href="#"><i class="icon-wrench"></i> Configure</a></li>
-						<li><a data-toggle="modal" href="#delete-modal"><i class="icon-remove"></i> <span class="muted">Delete</span></a></li>
+						<li><a data-toggle="modal" href="#delete-modal" data-id="<?=$project->project_id?>"><i class="icon-remove"></i> <span class="">Delete</span></a></li>
 					</ul>
 				</div>
 			</td>
@@ -81,22 +81,23 @@ endif;
 	</tbody>
 </table>
 <div class="modal hide" id="delete-modal">
-	<div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal">×</button>
-		<h3>Are you sure you want to delete this project?</h3>
-	</div>
-	<div class="modal-body">
-		<div class="alert fade in alert-error">
-			<strong>This operation is irreversible. If no more projects are using the attached repository, it will also be deleted.</strong>
+	<form action="<?=url_for('/projects/delete')?>" method="post">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">×</button>
+			<h3>Are you sure you want to delete this project?</h3>
 		</div>
-		<form>
-			<span class="span2">Remove Deploys?</span> <label class="checkbox" for="remote_deploys"><input id="remote_deploys" type="checkbox" name="remove_deploys" value="yes" /> Yes</label>
-		</form>
-	</div>
-	<div class="modal-footer">
-		<a class="btn btn-danger btn-large">Yes, I'm sure I want to delete this</a>
-		<a class="btn btn-large pull-left">NO! I changed my mind</a>
-	</div>
+		<div class="modal-body">
+			<div class="alert fade in alert-error">
+				<strong>This operation is irreversible. If no more projects are using the attached repository, it will also be deleted.</strong>
+			</div>
+			<span class="span2">Remove Deploys?</span> <label class="checkbox" for="remove_deploys"><input id="remote_deploys" type="checkbox" name="remove_deploys" value="yes" /> Yes</label>
+			<input type="hidden" name="project_id" value="" />
+		</div>
+		<div class="modal-footer">
+			<input type="submit" class="btn btn-danger btn-large" value="Yes, I'm sure I want to delete this" />
+			<a class="btn btn-large pull-left" data-dismiss="modal">NO! I changed my mind</a>
+		</div>
+	</form>
 </div>
 <script type="text/template" id="modal-template">
 <div class="modal hide" id="action-modal">
@@ -123,6 +124,9 @@ endif;
 </script>
 <script type="text/javascript">
 	(function($){
+		$('a[href="#delete-modal"]').click(function(){
+			$('#delete-modal input[name="project_id"]').attr('value', $(this).attr('data-id'));
+		});
 		$('.more-info').hover(function(event){
 			var self = $(this);
 			if (!self.data('cache')) {

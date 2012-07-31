@@ -16,6 +16,7 @@ function projects() {
 		} else {
 			$r->last_deployed = 'Never';
 		}
+		$r->project_id = $project->id;
 		$r->id = $id+1;
 		$r->last_commit = GitDeploy::instance()->latest_commit($project);
 		array_push($p_store, $r);
@@ -60,6 +61,44 @@ function projects_pull() {
 		} else {
 			set('error', $error);
 			return render('projects.php');
+		}
+	} else {
+		header('Location: '.url_for('/projects'));
+	}
+}
+
+function projects_delete() {
+	if (count($_POST)) {
+		$error = false;
+		if (array_key_exists('project_id', $_POST)) {
+			try {
+				$results = GitDeploy::instance()->delete_project($_POST['project_id'], (isset($_POST['remove_deploys']) && $_POST['remove_deploys'] === 'yes' ? true : false));
+				if ($results === false) {
+					$error = 'Delete encountered an error';
+				}
+			} catch (Exception $ex) {
+				$error = $ex->getMessage();
+			}
+		} else {
+			$error = 'Improperly formatted input';
+		}
+		
+		if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+			if ($error !== false) {
+				$o = new stdClass;
+				$o->error = $error;
+				$o->date = time();
+				return json($o);
+			}
+			$last_commit = GitDeploy::instance()->latest_commit($project);
+			$o = new stdClass;
+			$o->error = false;
+			$o->author = $last_commit->author->name.' <em class="muted">('.Formatter::relative_time($last_commit->author->time).')</em>';
+			$o->summary = $last_commit->summary;
+			return json($o);
+		} else {
+			set('error', $error);
+			return projects();
 		}
 	} else {
 		header('Location: '.url_for('/projects'));

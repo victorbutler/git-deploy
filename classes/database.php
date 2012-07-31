@@ -125,6 +125,7 @@ SQL;
 
 	/**
 	 * Search the database
+	 * @param	string	table
 	 * @param   array   columns to look for
 	 * @param   array   associative array of values to look for
 	 * @param   int     limit
@@ -146,6 +147,31 @@ SQL;
 		}
 		if ($limit === 1 && $stmt->execute() && ($row = $stmt->fetch(PDO::FETCH_OBJ)) !== false) {
 			return $row;
+		}
+		if ($stmt->execute() && ($rows = $stmt->fetchAll(PDO::FETCH_OBJ)) !== false) {
+			return $rows;
+		}
+		return false;
+	}
+
+	/**
+	 * Delete
+	 * @param	string	table
+	 * @param   array   columns to look for
+	 * @param   array   associative array of values to look for
+	 * @return  mixed   array (or object when limit = 1) on success, false on error
+	 */
+	public function delete($table, $columns = array(), $values = array()) {
+		$sql = 'DELETE FROM `'.$table.'` ';
+		if (count($columns) && count($values)) {
+			$sql .= 'WHERE ';
+		}
+		foreach ($columns as $name) {
+			$sql .= $name.'=:'.$name.' ';
+		}
+		$stmt = $this->db()->prepare($sql);
+		foreach ($values as $name => $value) {
+			$stmt->bindValue(':'.$name, $value, PDO::PARAM_STR);
 		}
 		if ($stmt->execute() && ($rows = $stmt->fetchAll(PDO::FETCH_OBJ)) !== false) {
 			return $rows;
