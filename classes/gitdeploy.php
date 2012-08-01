@@ -265,6 +265,31 @@ class GitDeploy {
 	}
 
 	/**
+	 * Function Description
+	 * @param   string   description
+	 * @return  boolean
+	 * @uses    Class::method
+	 */
+	protected function _fix_submodules($path, $protocol) {
+		$regex = '/\[submodule \"[^\"]+\"\]\n\s+path = (.*)/';
+		if (is_file($path.'/.gitmodules')) {
+			$submodules = realpath($path).'/.gitmodules';
+			$file_contents = file_get_contents($submodules);
+			$new_modules_file = preg_replace('/(\s+url \= )git\@bitbucket.org\:(.*)/', '$1'.$protocol.'$2', $file_contents);
+			file_put_contents($submodules, $new_modules_file);
+			$command = 'cd '.realpath($path).' && '.$this->_config['git_bin'].' submodule update --init';
+			$result = shell_exec($command);
+
+			preg_match_all($regex, $new_modules_file, $matches);
+			//echo $new_modules_file.'<br />';
+			foreach ($matches[1] as $new_path) {
+				$this->_fix_submodules($path.'/'.$new_path, $protocol);
+				//echo $path.'/'.$new_path.'<br />';
+			}
+		}
+	}
+
+	/**
 	 * http://stackoverflow.com/questions/379081/track-all-remote-git-branches-as-local-branches
 	 * @param   string   description
 	 * @return  Git
@@ -277,17 +302,13 @@ class GitDeploy {
 		}
 		
 		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' .';
-		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' submodule update --init --recursive';
 		$command3 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
 
 		$result1 = shell_exec($command1);
 		
 		if (is_file($submodules = realpath($location).'/.gitmodules') && strpos($remote, 'bitbucket.org') > -1) {
 			$protocol = substr($remote, 0, strpos($remote, '/', 8) + 1);
-			$modules_file = file_get_contents($submodules);
-			$new_modules_file = preg_replace('/(\s+url \= )git\@bitbucket.org\:(.*)/', '$1'.$protocol.'$2', $modules_file);
-			file_put_contents($submodules, $new_modules_file);
-			$result2 = shell_exec($command2);
+			$this->_fix_submodules($location, $protocol);
 		}
 		
 		$result3 = shell_exec($command3);
