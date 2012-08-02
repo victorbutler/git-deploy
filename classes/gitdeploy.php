@@ -173,7 +173,7 @@ class GitDeploy {
 		$git = new Git($repository->location.'/.git');
 
 		if ($git instanceof Git) {
-			$command = 'cd '.realpath($repository->location).' && '.$this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['git_bin'].' pull origin '.escapeshellarg($project_obj_or_id->branch);
+			$command = 'cd '.realpath($repository->location).' && '.$this->_config['git_bin'].' checkout '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['git_bin'].' pull origin '.escapeshellarg($project_obj_or_id->branch).' && '.$this->_config['git_bin'].' submodule update --init --recursive';
 			$result = shell_exec($command);
 			if ($result === NULL) {
 				throw new Exception('Problem performing git pull on '.$repository->name.' Command: '.$command);
