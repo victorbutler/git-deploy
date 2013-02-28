@@ -32,7 +32,7 @@ class GitDeploy {
 	 */
 	protected $_config = array(
 		'repo_root' => 'repositories/',
-		'git_bin'   => '/usr/bin/git',
+		'git_bin'   => '/usr/local/bin/git',
 		'rsync_bin' => '/usr/bin/rsync'
 	);
 
@@ -254,7 +254,7 @@ class GitDeploy {
 						)
 					);
 					$stream = stream_context_create($context);
-					$result = file_get_contents($url.http_build_query($fields), false, $stream);
+					$result = file_get_contents($url.'&'.http_build_query($fields), false, $stream);
 				}
 			}
 			return true;
@@ -301,6 +301,31 @@ class GitDeploy {
 	}
 
 	/**
+	 * Function Description
+	 * @param   string   description
+	 * @return  boolean
+	 * @uses    Class::method
+	 */
+	protected function _fix_submodules($path, $protocol) {
+		$regex = '/\[submodule \"[^\"]+\"\]\n\s+path = (.*)/';
+		if (is_file($path.'/.gitmodules')) {
+			$submodules = realpath($path).'/.gitmodules';
+			$file_contents = file_get_contents($submodules);
+			$new_modules_file = preg_replace('/(\s+url \= )git\@bitbucket.org\:(.*)/', '$1'.$protocol.'$2', $file_contents);
+			file_put_contents($submodules, $new_modules_file);
+			$command = 'cd '.realpath($path).' && '.$this->_config['git_bin'].' submodule update --init';
+			$result = shell_exec($command);
+
+			preg_match_all($regex, $new_modules_file, $matches);
+			//echo $new_modules_file.'<br />';
+			foreach ($matches[1] as $new_path) {
+				$this->_fix_submodules($path.'/'.$new_path, $protocol);
+				//echo $path.'/'.$new_path.'<br />';
+			}
+		}
+	}
+
+	/**
 	 * http://stackoverflow.com/questions/379081/track-all-remote-git-branches-as-local-branches
 	 * @param   string   description
 	 * @return  Git
@@ -312,15 +337,21 @@ class GitDeploy {
 			}
 		}
 		
-		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' . && '.$this->_config['git_bin'].' submodule update --init --recursive';
-		$command2 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
+		$command1 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' clone '.$remote.' .';
+		$command3 = 'cd '.realpath($location).' && '.$this->_config['git_bin'].' branch -r';
 
 		$result1 = shell_exec($command1);
-		$result2 = shell_exec($command2);
-		if ($result1 === NULL && $result2 === NULL) {
+		
+		if (is_file($submodules = realpath($location).'/.gitmodules') && strpos($remote, 'bitbucket.org') > -1) {
+			$protocol = substr($remote, 0, strpos($remote, '/', 8) + 1);
+			$this->_fix_submodules($location, $protocol);
+		}
+		
+		$result3 = shell_exec($command3);
+		if ($result1 === NULL && $result3 === NULL) {
 			throw new Exception('Problem performing git pull on '.$name.' Command: '.$command1);
 		}
-		$lines = preg_split('/\n/', $result2);
+		$lines = preg_split('/\n/', $result3);
 		foreach ($lines as $line) {
 			if (strpos($line, 'origin/HEAD') === false && trim($line) !== '') {
 				$branch = preg_replace('/^\s*origin\//', '', trim($line));
