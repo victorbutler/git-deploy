@@ -239,7 +239,7 @@ class GitDeploy {
 					curl_setopt($c, CURLOPT_POST, count($fields));
 					curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
 					if ($proxy) {
-						curl_setopt($c, CURLOPT_PROXY, $proxy);
+						curl_setopt($c, CURLOPT_PROXY, 'http://'.$proxy);
 					}
 					//curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
 					curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
@@ -260,7 +260,7 @@ class GitDeploy {
 						)
 					);
 					if ($proxy) {
-						$context['http']['proxy'] = $proxy;
+						$context['http']['proxy'] = 'tcp://'.$proxy;
 					}
 					$stream = stream_context_create($context);
 					$result = fopen($url, 'r', false, $stream);
