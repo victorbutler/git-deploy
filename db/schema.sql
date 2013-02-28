@@ -27,3 +27,4 @@ INSERT INTO config ("key", "value") VALUES ("hipchat_color", "purple");
 INSERT INTO config ("key", "value") VALUES ("hipchat_from", "Git Deployer");
 INSERT INTO config ("key", "value") VALUES ("hipchat_notify", "1");
 INSERT INTO config ("key", "value") VALUES ("hipchat_auth_token", "change_me");
+INSERT INTO config ("key", "value") VALUES ("curl_proxy", "");
