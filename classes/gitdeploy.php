@@ -254,7 +254,7 @@ class GitDeploy {
 						)
 					);
 					$stream = stream_context_create($context);
-					$result = file_get_contents($url.http_build_query($fields), false, $stream);
+					$result = file_get_contents($url.'&'.http_build_query($fields), false, $stream);
 				}
 			}
 			return true;
