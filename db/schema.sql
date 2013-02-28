@@ -14,3 +14,16 @@ CREATE TABLE "repositories" (
 	"remote" VARCHAR NOT NULL,
 	"location" VARCHAR NOT NULL
 );
+
+CREATE TABLE "config" (
+	"id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ,
+	"key" VARCHAR NOT NULL ,
+	"value" VARCHAR NOT NULL
+);
+
+INSERT INTO config ("key", "value") VALUES ("hipchat_enabled", "no");
+INSERT INTO config ("key", "value") VALUES ("hipchat_room_id", "1");
+INSERT INTO config ("key", "value") VALUES ("hipchat_color", "purple");
+INSERT INTO config ("key", "value") VALUES ("hipchat_from", "Git Deployer");
+INSERT INTO config ("key", "value") VALUES ("hipchat_notify", "1");
+INSERT INTO config ("key", "value") VALUES ("hipchat_auth_token", "change_me");
