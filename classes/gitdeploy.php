@@ -224,6 +224,7 @@ class GitDeploy {
 			if ($config->get('hipchat_enabled') == 'yes') {
 				$url = 'https://api.hipchat.com/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
 				$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
+				$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
 				$fields = array(
 					'room_id' => $config->get('hipchat_room_id'),
 					'from' => $config->get('hipchat_from'),
@@ -236,7 +237,11 @@ class GitDeploy {
 				curl_setopt($c, CURLOPT_URL, $url);
 				curl_setopt($c, CURLOPT_POST, count($fields));
 				curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
+				curl_setopt($c, CURLOPT_PROXY, $proxy);
+				//curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
+				curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
 				curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($c, CURLOPT_HEADER, 1);
 
 				curl_exec($c);
 				curl_close($c);
