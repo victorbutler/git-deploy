@@ -43,7 +43,7 @@ class Config {
 		}
 		$result = Database::instance()->find_one('config', array('key'), array('key' => $name));
 		if ($result === false) {
-			throw new Exception('Config item '.$name.' not found');
+			return null;
 		}
 		$this->_cache[$name] = $result->value;
 		return $result->value;
