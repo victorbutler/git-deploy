@@ -238,7 +238,9 @@ class GitDeploy {
 					curl_setopt($c, CURLOPT_URL, $url);
 					curl_setopt($c, CURLOPT_POST, count($fields));
 					curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
-					curl_setopt($c, CURLOPT_PROXY, $proxy);
+					if ($proxy) {
+						curl_setopt($c, CURLOPT_PROXY, $proxy);
+					}
 					//curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
 					curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
 					curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
@@ -247,14 +249,21 @@ class GitDeploy {
 					curl_exec($c);
 					curl_close($c);
 				} elseif (function_exists('stream_context_create')) {
+					$data = http_build_query($fields);
 					$context = array(
 						'http' => array(
-							'proxy' => $proxy,
-							'request_fulluri' => true
+							'request_fulluri' => true,
+							'method' => 'POST',
+							'header'=> "Content-type: application/x-www-form-urlencoded\r\n"
+									 . "Content-Length: " . strlen($data) . "\r\n",
+							'content' => $data
 						)
 					);
+					if ($proxy) {
+						$context['http']['proxy'] = $proxy;
+					}
 					$stream = stream_context_create($context);
-					$result = file_get_contents($url.'&'.http_build_query($fields), false, $stream);
+					$result = fopen($url, 'r', false, $stream);
 				}
 			}
 			return true;
