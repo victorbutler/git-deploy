@@ -220,20 +220,20 @@ class GitDeploy {
 				throw new Exception('Problem performing deploy on '.$repository->name.' Command: '.$command);
 			}
 			$update_db = Database::instance()->update_deploy($project_obj_or_id->id);
-			if (function_exists("curl_init")) {
-				$config = Config::instance();
-				if ($config->get('hipchat_enabled') == 'yes') {
-					$url = 'https://api.hipchat.com/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
-					$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
-					$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
-					$fields = array(
-						'room_id' => $config->get('hipchat_room_id'),
-						'from' => $config->get('hipchat_from'),
-						'message_format' => 'html',
-						'notify' => $config->get('hipchat_notify'),
-						'color' => $config->get('hipchat_color'),
-						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
-					);
+			$config = Config::instance();
+			if ($config->get('hipchat_enabled') == 'yes') {
+				$url = 'https://api.hipchat.com/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
+				$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
+				$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
+				$fields = array(
+					'room_id' => $config->get('hipchat_room_id'),
+					'from' => $config->get('hipchat_from'),
+					'message_format' => 'html',
+					'notify' => $config->get('hipchat_notify'),
+					'color' => $config->get('hipchat_color'),
+					'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
+				);
+				if (function_exists('curl_init')) {
 					$c = curl_init();
 					curl_setopt($c, CURLOPT_URL, $url);
 					curl_setopt($c, CURLOPT_POST, count($fields));
@@ -246,6 +246,14 @@ class GitDeploy {
 
 					curl_exec($c);
 					curl_close($c);
+				} elseif (function_exists('stream_context_create')) {
+					$context = array(
+						'http' => array(
+							'proxy' => $proxy,
+							'request_fulluri' => true
+						)
+					);
+					$result = file_get_contents($url.http_build_query($fields), false, $context);
 				}
 			}
 			return true;
