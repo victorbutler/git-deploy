@@ -222,7 +222,7 @@ class GitDeploy {
 			$update_db = Database::instance()->update_deploy($project_obj_or_id->id);
 			$config = Config::instance();
 			if ($config->get('hipchat_enabled') == 'yes') {
-				$url = 'https://api.hipchat.com/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
+				$url = 'https://107.21.238.207/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
 				$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
 				$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
 				$fields = array(
