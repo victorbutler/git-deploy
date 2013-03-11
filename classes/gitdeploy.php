@@ -245,6 +245,8 @@ class GitDeploy {
 					curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
 					curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 					curl_setopt($c, CURLOPT_HEADER, 1);
+					curl_setopt($c, CURLOPT_SSL_VERIFYHOST, 0);
+					curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
 
 					curl_exec($c);
 					curl_close($c);
