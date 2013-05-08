@@ -268,14 +268,13 @@ function projects_pull_deploy() {
 		}
 		
 		if (array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+			$o = new stdClass;
 			if ($error !== false) {
-				$o = new stdClass;
 				$o->error = $error;
 				$o->date = time();
 				return json($o);
 			}
 			$last_commit = GitDeploy::instance()->latest_commit($project);
-			$o = new stdClass;
 			$o->error = false;
 			$o->author = $last_commit->author->name.' <em class="muted">('.Formatter::relative_time($last_commit->author->time).')</em>';
 			$o->summary = $last_commit->summary;

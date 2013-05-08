@@ -155,22 +155,32 @@ endif;
 				}
 				var modal = $($.mustache($('#modal-template').html(), view)).appendTo('body').modal({keyboard: false});
 				var button = $(this).closest('.btn-group');
-				$.post(self.attr('href'), {project_id: button.attr('data-project')}, function(data, textStatus, jqXHR){
-					modal.modal('hide').remove();
-					$('.alert').remove();
-					if (data.error !== false) {
-						$('#error-msg').html($.mustache($('#error-template').html(), {message: data.error}));
-					} else {
-						$('#success-msg').html($.mustache($('#success-template').html(), {message: view.action+' was successful'}));
-						var tr = button.closest('tr');
-						tr.find('td.author').html(data.author);
-						tr.find('td.summary').html(data.summary);
-						// pulsate the target
-						var tds = tr.find('td');
-						var oldbg = tds.css('backgroundColor');
-						tds.animate({'backgroundColor': '#f9d9e2'}, 800).delay(1200).animate({'backgroundColor': oldbg}, 800, function(){$(this).css('backgroundColor', '');});
-					}
+				$.ajax({
+					type: "POST",
+					url: self.attr('href'),
+					data: {project_id: button.attr('data-project')},
+					success: function(data, textStatus, jqXHR){
+						modal.modal('hide').remove();
+						$('.alert').remove();
+						if (data.error !== false) {
+							$('#error-msg').html($.mustache($('#error-template').html(), {message: data.error}));
+						} else {
+							$('#success-msg').html($.mustache($('#success-template').html(), {message: view.action+' was successful'}));
+							var tr = button.closest('tr');
+							tr.find('td.author').html(data.author);
+							tr.find('td.summary').html(data.summary);
+							// pulsate the target
+							var tds = tr.find('td');
+							var oldbg = tds.css('backgroundColor');
+							tds.animate({'backgroundColor': '#f9d9e2'}, 800).delay(1200).animate({'backgroundColor': oldbg}, 800, function(){$(this).css('backgroundColor', '');});
+						}
+					},
+					dataType: 'json'
 				});
+				$.post({
+
+				});
+				self.attr('href'), {project_id: button.attr('data-project')}, );
 			}
 		});
 	})(jQuery);

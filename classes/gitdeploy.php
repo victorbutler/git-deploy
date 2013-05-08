@@ -232,7 +232,7 @@ class GitDeploy {
 				$hipchat_try = 0;
 				while (!$hipchat_sent) {
 					$hip_ip = $hipchat_ips[$hipchat_try];
-					$url = 'https://'.$hip_ip.'/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
+					$url = $hip_ip.'/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
 					$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
 					$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
 					$fields = array(
@@ -244,10 +244,11 @@ class GitDeploy {
 						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
 					);
 					if (function_exists('curl_init')) {
+						$protocol = 'https://';
 						$c = curl_init();
 						curl_setopt($c, CURLOPT_POST, count($fields));
-						curl_setopt($c, CURLOPT_URL, $url);
-						curl_setopt($c, CURLOPT_TIMEOUT, 5);
+						curl_setopt($c, CURLOPT_URL, $protocol.$url);
+						curl_setopt($c, CURLOPT_TIMEOUT, 3);
 						curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
 						if ($proxy) {
 							curl_setopt($c, CURLOPT_PROXY, 'http://'.$proxy);
@@ -264,15 +265,16 @@ class GitDeploy {
 	        			$curl_error = curl_error($c);
 						curl_close($c);
 
-						if ($curl_error) {
+						if ($curl_errno > 0) {
 							$hipchat_try++;
 							if ($hipchat_try === count($hipchat_ips)) {
-								break;
+								throw new Exception('Deploy was successful but HipChat message timed out');
 							}
 						} else {
 							$hipchat_sent = true;
 						}
 					} elseif (function_exists('stream_context_create')) {
+						$protocol = 'http://';
 						$data = http_build_query($fields);
 						$context = array(
 							'http' => array(
@@ -287,9 +289,18 @@ class GitDeploy {
 							$context['http']['proxy'] = 'tcp://'.$proxy;
 						}
 						$stream = stream_context_create($context);
-						$result = fopen($url, 'r', false, $stream);
-						fclose($result);
-						$hipchat_sent = true;
+						$result = @fopen($protocol.$url, 'r', false, $stream);
+						if ($result) {
+							fclose($result);
+							$hipchat_sent = true;
+						} else {
+							$hipchat_try++;
+							if ($hipchat_try === count($hipchat_ips)) {
+								throw new Exception('Deploy was successful but HipChat message timed out');
+							}
+						}
+					} else {
+						break;
 					}
 				}
 			}
