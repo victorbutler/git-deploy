@@ -235,13 +235,14 @@ class GitDeploy {
 					$url = $hip_ip.'/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
 					$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
 					$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
+					$latest_commit = $this->latest_commit($project_obj_or_id);
 					$fields = array(
 						'room_id' => $config->get('hipchat_room_id'),
 						'from' => $config->get('hipchat_from'),
 						'message_format' => 'html',
 						'notify' => $config->get('hipchat_notify'),
 						'color' => $config->get('hipchat_color'),
-						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
+						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed with last commit by <strong>'.$latest_commit->author->name.'</strong> ('.Formatter::relative_time($last_commit->author->time).'): '.$latest_commit->summary
 					);
 					if (function_exists('curl_init')) {
 						$protocol = 'https://';
