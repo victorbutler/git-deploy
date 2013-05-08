@@ -223,9 +223,9 @@ class GitDeploy {
 			$config = Config::instance();
 			if ($config->get('hipchat_enabled') == 'yes') {
 				$hipchat_ips = array(
-					'107.21.238.207',
 					'23.23.169.177',
 					'54.225.164.125',
+					'107.21.238.207',
 					'174.129.224.240'
 				);
 				$hipchat_sent = false;

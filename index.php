@@ -5,7 +5,8 @@ set_include_path(get_include_path().PATH_SEPARATOR.implode(PATH_SEPARATOR, array
 require_once('vendors/limonade.php');
 
 function configure() {
-	option('env', ENV_DEVELOPMENT);
+	$env = $_SERVER['HTTP_HOST'] == 'localhost' ? ENV_DEVELOPMENT : ENV_PRODUCTION;
+    option('env', $env);
 	layout('templates/general.php');
 	require_once_dir('classes');
 }
