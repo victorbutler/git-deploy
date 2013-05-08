@@ -242,7 +242,7 @@ class GitDeploy {
 						'message_format' => 'html',
 						'notify' => $config->get('hipchat_notify'),
 						'color' => $config->get('hipchat_color'),
-						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed with last commit by <strong>'.$latest_commit->author->name.'</strong> ('.Formatter::relative_time($last_commit->author->time).'): '.$latest_commit->summary
+						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed with last commit by <strong>'.$latest_commit->author->name.'</strong> ('.Formatter::relative_time($latest_commit->author->time).'): '.$latest_commit->summary
 					);
 					if (function_exists('curl_init')) {
 						$protocol = 'https://';
