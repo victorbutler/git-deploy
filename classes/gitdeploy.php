@@ -268,7 +268,8 @@ class GitDeploy {
 						if ($curl_errno > 0) {
 							$hipchat_try++;
 							if ($hipchat_try === count($hipchat_ips)) {
-								throw new Exception('Deploy was successful but HipChat message timed out');
+								//throw new Exception('Deploy was successful but HipChat message timed out');
+								$hipchat_sent = true;
 							}
 						} else {
 							$hipchat_sent = true;
@@ -280,6 +281,7 @@ class GitDeploy {
 							'http' => array(
 								'request_fulluri' => true,
 								'method' => 'POST',
+								'timeout' => 3,
 								'header'=> "Content-type: application/x-www-form-urlencoded\r\n"
 										 . "Content-Length: " . strlen($data) . "\r\n",
 								'content' => $data
