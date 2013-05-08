@@ -222,50 +222,75 @@ class GitDeploy {
 			$update_db = Database::instance()->update_deploy($project_obj_or_id->id);
 			$config = Config::instance();
 			if ($config->get('hipchat_enabled') == 'yes') {
-				$url = 'https://23.23.169.177/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
-				$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
-				$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
-				$fields = array(
-					'room_id' => $config->get('hipchat_room_id'),
-					'from' => $config->get('hipchat_from'),
-					'message_format' => 'html',
-					'notify' => $config->get('hipchat_notify'),
-					'color' => $config->get('hipchat_color'),
-					'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
+				$hipchat_ips = array(
+					'107.21.238.207',
+					'23.23.169.177',
+					'54.225.164.125',
+					'174.129.224.240'
 				);
-				if (function_exists('curl_init')) {
-					$c = curl_init();
-					curl_setopt($c, CURLOPT_URL, $url);
-					curl_setopt($c, CURLOPT_POST, count($fields));
-					curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
-					if ($proxy) {
-						curl_setopt($c, CURLOPT_PROXY, 'http://'.$proxy);
-					}
-					//curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
-					curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
-					curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-					curl_setopt($c, CURLOPT_HEADER, 1);
-					curl_setopt($c, CURLOPT_SSL_VERIFYHOST, 0);
-					curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
-
-					curl_exec($c);
-					curl_close($c);
-				} elseif (function_exists('stream_context_create')) {
-					$data = http_build_query($fields);
-					$context = array(
-						'http' => array(
-							'request_fulluri' => true,
-							'method' => 'POST',
-							'header'=> "Content-type: application/x-www-form-urlencoded\r\n"
-									 . "Content-Length: " . strlen($data) . "\r\n",
-							'content' => $data
-						)
+				$hipchat_sent = false;
+				$hipchat_try = 0;
+				while (!$hipchat_sent) {
+					$hip_ip = $hipchat_ips[$hipchat_try];
+					$url = 'https://'.$hip_ip.'/v1/rooms/message?auth_token='.$config->get('hipchat_auth_token');
+					$destination = 'http://'.$_SERVER['HTTP_HOST'].option('base_path').'/'.$project_obj_or_id->destination;
+					$proxy = ($config->get('curl_proxy') && $config->get('curl_proxy') == '' ? null : $config->get('curl_proxy')); // null disables proxy (if config item is undefined or empty string in DB)
+					$fields = array(
+						'room_id' => $config->get('hipchat_room_id'),
+						'from' => $config->get('hipchat_from'),
+						'message_format' => 'html',
+						'notify' => $config->get('hipchat_notify'),
+						'color' => $config->get('hipchat_color'),
+						'message' => '<strong>'.$project_obj_or_id->name.'</strong> deployed to <a href="'.$destination.'">'.$destination.'</a>'
 					);
-					if ($proxy) {
-						$context['http']['proxy'] = 'tcp://'.$proxy;
+					if (function_exists('curl_init')) {
+						$c = curl_init();
+						curl_setopt($c, CURLOPT_POST, count($fields));
+						curl_setopt($c, CURLOPT_URL, $url);
+						curl_setopt($c, CURLOPT_TIMEOUT, 5);
+						curl_setopt($c, CURLOPT_POSTFIELDS, http_build_query($fields));
+						if ($proxy) {
+							curl_setopt($c, CURLOPT_PROXY, 'http://'.$proxy);
+						}
+						//curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
+						curl_setopt($c, CURLOPT_FOLLOWLOCATION, 1);
+						curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+						curl_setopt($c, CURLOPT_HEADER, 1);
+						curl_setopt($c, CURLOPT_SSL_VERIFYHOST, 0);
+						curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
+
+						curl_exec($c);
+						$curl_errno = curl_errno($c);
+	        			$curl_error = curl_error($c);
+						curl_close($c);
+
+						if ($curl_error) {
+							$hipchat_try++;
+							if ($hipchat_try === count($hipchat_ips)) {
+								break;
+							}
+						} else {
+							$hipchat_sent = true;
+						}
+					} elseif (function_exists('stream_context_create')) {
+						$data = http_build_query($fields);
+						$context = array(
+							'http' => array(
+								'request_fulluri' => true,
+								'method' => 'POST',
+								'header'=> "Content-type: application/x-www-form-urlencoded\r\n"
+										 . "Content-Length: " . strlen($data) . "\r\n",
+								'content' => $data
+							)
+						);
+						if ($proxy) {
+							$context['http']['proxy'] = 'tcp://'.$proxy;
+						}
+						$stream = stream_context_create($context);
+						$result = fopen($url, 'r', false, $stream);
+						fclose($result);
+						$hipchat_sent = true;
 					}
-					$stream = stream_context_create($context);
-					$result = fopen($url, 'r', false, $stream);
 				}
 			}
 			return true;
