@@ -177,10 +177,6 @@ endif;
 					},
 					dataType: 'json'
 				});
-				$.post({
-
-				});
-				self.attr('href'), {project_id: button.attr('data-project')}, );
 			}
 		});
 	})(jQuery);
