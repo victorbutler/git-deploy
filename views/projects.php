@@ -161,7 +161,7 @@ endif;
 					data: {project_id: button.attr('data-project')},
 					success: function(data, textStatus, jqXHR){
 						modal.modal('hide').remove();
-						$('.alert').remove();
+						$('.alert').not('.filtering').remove();
 						if (data.error !== false) {
 							$('#error-msg').html($.mustache($('#error-template').html(), {message: data.error}));
 						} else {
@@ -194,3 +194,48 @@ else:
 <?php
 endif;
 ?>
+
+<script>
+	(function(){
+
+		var _totalArray = ["ALL"],
+		_btnFrag        = '',
+		_projTable      = $('#projects-table'),
+		_projTbody         = _projTable.find('tbody'),
+		_btnWrap        = $('<div><div class="alert alert-success filtering" role="alert"><div class="btn-group" id="btn-group" role="group" data-toggle="buttons-radio"></div></div></div>').insertBefore(_projTable),
+		_btnTemp        = '<label class="btn"><input class="sorting" type="radio" name="options" id="{{id}}" autocomplete="off">{{name}}</label>';
+	
+	$.when(
+		_projTable.find('tr').find('td.author').each(function(){
+			var _ind, 
+			_val   = $(this).text(),      
+			_name  = _val.substring(0, _val.indexOf('(')).trim(),
+			_class = _name.replace(/\s/g, '').toLowerCase();
+			_name  = _name.toUpperCase();
+			_ind   = _totalArray.indexOf(_name);
+
+			$(this).parent().addClass(_class);
+
+			(_totalArray.length === 0) && _totalArray.push(_name);
+			(_totalArray.indexOf(_name) < 0) && _totalArray.push(_name);
+		})
+	).then(function(){
+			$.when($.each(_totalArray, function(k, v){
+                        _btnFrag += _btnTemp.replace(/{{name}}/ig, v).replace(/{{id}}/ig, v.replace(/\s/g, '').toLowerCase());
+                    })
+                ).done(function(){
+                   $(_btnFrag).appendTo('#btn-group');
+                    $('.sorting').eq(0).attr('checked','checked').parent().addClass('active').end();
+                    $('.sorting').on('change', function(){ var _toShow = $(this).attr('id');
+                    	if(_toShow === 'all'){
+                    		_projTbody.find('tr').show();
+                    	}else{
+                    		_projTbody.find('tr').hide();
+                    		_projTbody.find('tr.'+_toShow+'').show();
+                    	}
+                    });
+            });
+	});
+	})();
+
+</script>

@@ -3,3 +3,15 @@
 	padding-top: 20px;
 	border-top: 1px solid #e5e5e5;
 }
+
+.filtering .btn-group{
+	overflow:hidden
+}
+
+.filtering .btn{
+	 padding: 10px 20px
+}
+
+.filtering .sorting{
+	position:absolute; top: -200px;
+}
