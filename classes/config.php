@@ -49,4 +49,24 @@ class Config {
 		return $result->value;
 	}
 
+	/**
+	 * Set item and reset cache
+	 * @param   string   config key
+	 * @param   string   config value
+	 * @return  string
+	 * @uses    Database::find_one
+	 */
+	public function set($name, $value) {
+		$result = Database::instance()->find_one('config', array('key'), array('key' => $name));
+		if ($result === false) {
+			return null;
+		}
+		$result = Database::instance()->update('config', $name, $value, 'id='.$result->id);
+		if ($result === false) {
+			return null;
+		}
+		$this->_cache[$name] = $value;
+		return $value;
+	}
+
 }
