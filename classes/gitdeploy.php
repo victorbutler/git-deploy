@@ -221,6 +221,7 @@ class GitDeploy {
 				throw new Exception('Problem performing deploy on '.$repository->name.' Command: '.$command);
 			}
 			$update_db = Database::instance()->update_deploy($project_obj_or_id->id);
+			$config = Config::instance();
 			if ($config->get('hipchat_enabled') == 'yes') {
 				$latest_commit = $this->latest_commit($project_obj_or_id);
 				Hipchat::instance()->send('<strong>'.$project_obj_or_id->name.'</strong> deployed with last commit by <strong>'.$latest_commit->author->name.'</strong> ('.Formatter::relative_time($latest_commit->author->time).'): '.$latest_commit->summary);
