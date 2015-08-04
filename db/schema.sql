@@ -28,3 +28,4 @@ INSERT INTO config ("key", "value") VALUES ("hipchat_from", "Git Deployer");
 INSERT INTO config ("key", "value") VALUES ("hipchat_notify", "1");
 INSERT INTO config ("key", "value") VALUES ("hipchat_auth_token", "change_me");
 INSERT INTO config ("key", "value") VALUES ("curl_proxy", "");
+INSERT INTO config ("key", "value") VALUES ("hipchat_ip", "54.243.47.194");
